@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>  
 <html lang="en">  
 <head>
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
     <title>DuckShop</title>  
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkR1Y2tTaG9wIiwKICAic2hvcnRfbmFtZSI6ICJEdWNrU2hvcCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29xvciI6ICIjMjg3NGYwIgp9">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkR1Y2tTaG9wIiwKICAic2hvcnRfbmFtZSI6ICJEdWNrU2hvcCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMyODc0ZjAiCn0=">
     <link rel="preconnect" href="https://i.ibb.co">  
     <link rel="preconnect" href="https://fonts.googleapis.com">  
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
@@ -127,15 +126,59 @@
         .home-search-trigger { background-color: var(--theme-light-gray); border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; color: var(--theme-secondary-text); cursor: pointer; width: 100%; }  
         .home-search-trigger i { font-size: 1.1rem; }  
           
-        /* CATEGORY SCROLLER */  
-        #home-category-scroller { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; background-color: #fff; min-height: 90px; }  
-        .home-category-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; cursor: pointer; color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s; position: relative; overflow: hidden; }  
-        .home-category-item:hover { transform: translateY(-3px); }  
-        .cat-fast-food { background: linear-gradient(135deg, #ff416c, #ff4b2b); }  
-        .cat-grocery { background: linear-gradient(135deg, #11998e, #38ef7d); }  
-        .home-category-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.8); background-color: white; z-index: 2; opacity: 1 !important; }  
-        .home-category-item span { font-size: 1rem; font-weight: 600; white-space: nowrap; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }  
+        /* ================================================================
+           NEW HORIZONTAL CATEGORY SCROLLER (FLIPKART STYLE)
+           ================================================================ */
+        .category-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 16px 16px;
+            background-color: #fff;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--theme-border);
+        }
+        .category-scroll-container::-webkit-scrollbar {
+            height: 3px;
+        }
+        .category-scroll-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        .category-scroll-item {
+            flex: 0 0 auto;
+            width: 70px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--theme-text);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .category-scroll-item:hover {
+            transform: scale(1.05);
+        }
+        .category-scroll-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #f0f0f0;
+            background: #fff;
+            margin-bottom: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .category-scroll-item span {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
 
+        /* REMOVED old category scroller styles (home-category-item) */
+          
         #home-page .page-content { padding: 1rem; }  
         #home-page .page-title, #categories-page .page-title, #favourites-page .page-title, #about-page .page-title { padding-top: 1rem; }  
           
@@ -231,11 +274,78 @@
         .product-actions .icon-btn.active { color: var(--theme-orange); border-color: transparent; }  
         .product-actions .icon-btn.share-btn { color: var(--theme-blue); }
           
-        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; padding: 1.5rem; }  
-        .category-card { border-radius: 4px; overflow: hidden; text-align: center; box-shadow: var(--theme-card-shadow); cursor: pointer; transition: transform 0.3s; position: relative; background: white; }  
-        .category-card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); }  
-        .category-card img { width: 100%; height: 150px; object-fit: cover; }  
-        .category-card-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(40, 116, 240, 0.8); color: white; padding: 0.5rem; font-weight: 500; font-size: 0.9rem; }  
+        /* =================================================================
+           M E E S H O   S T Y L E   C A T E G O R I E S   P A G E
+           ================================================================= */
+        .categories-header {
+            background: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--theme-border);
+        }
+        .categories-search-box {
+            background-color: #f2f2f2;
+            border-radius: 8px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #9e9e9e;
+            border: 1px solid #e0e0e0;
+        }
+        .categories-search-box i {
+            font-size: 1.2rem;
+            color: var(--theme-secondary-text);
+        }
+        .categories-search-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+        }
+        .category-grid-meesho {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px 10px;
+            padding: 20px 16px;
+            background: #fff;
+        }
+        .category-grid-meesho .category-card-meesho {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .category-grid-meesho .category-card-meesho:hover {
+            transform: scale(1.05);
+        }
+        .category-grid-meesho .category-card-meesho img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f8f8f8;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 8px;
+        }
+        .category-grid-meesho .category-card-meesho span {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--theme-text);
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        @media (max-width: 480px) {
+            .category-grid-meesho {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
 
         .list-container { max-width: 900px; margin: 1.5rem auto; background: white; padding: 1rem; border-radius: 4px; box-shadow: var(--theme-card-shadow); }  
         .list-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--theme-border); }  
@@ -722,7 +832,6 @@
             .page-title { font-size: 1.3rem; }  
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }  
             #related-products-grid { grid-template-columns: repeat(2, 1fr); }  
-            .category-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }  
             .product-detail-layout { grid-template-columns: 1fr; }  
             .list-item { flex-direction: column; align-items: flex-start; text-align: center; }  
             .list-item img { margin: 0 auto 0.8rem; }  
@@ -1330,7 +1439,7 @@
                 </div>  
             </div>  
 
-            <div id="home-category-scroller"></div>  
+            <div id="home-category-scroller" class="category-scroll-container"></div>  
               
             <div class="page-content">  
                 <div id="home-banner-container"></div>  
@@ -1356,6 +1465,17 @@
         <section id="category-products-page" class="page">  
             <h1 id="category-products-title" class="page-title"></h1>  
             <div id="category-product-grid" class="product-grid"></div>  
+        </section>  
+
+        <!-- Categories Page (Meesho Style) -->  
+        <section id="categories-page" class="page">  
+            <div class="categories-header">
+                <div class="categories-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="category-search" placeholder="Search categories">
+                </div>
+            </div>
+            <div id="categories-grid" class="category-grid-meesho"></div>  
         </section>  
           
         <section id="product-detail-page" class="page"></section>  
@@ -1914,6 +2034,10 @@
             <i class="fas fa-home"></i>  
             <span>Home</span>  
         </a>  
+        <a href="#categories" class="nav-link">  
+            <i class="fas fa-th-large"></i>  
+            <span>Categories</span>  
+        </a>  
         <a href="#cart" class="nav-link">  
             <i class="fas fa-shopping-cart"></i>  
             <span>Cart</span>  
@@ -2164,15 +2288,24 @@
             }  
         };  
 
+        // MODIFIED: Home category scroller now shows ALL categories in horizontal scroll
         const renderHomeCategoryScroller = () => {  
             const container = document.getElementById('home-category-scroller');  
             if (!container) return;  
-            const fastFoodCat = allCategories.find(c => c.name.toLowerCase().includes('fast') && c.name.toLowerCase().includes('food'));  
-            const groceryCat = allCategories.find(c => c.name.toLowerCase().includes('grocery'));  
-            let html = '';  
-            if (fastFoodCat) html += `<div class="home-category-item cat-fast-food" data-category-id="${fastFoodCat.id}" data-category-name="${fastFoodCat.name}"><img src="${fastFoodCat.imageUrl}" alt="${fastFoodCat.name}" loading="lazy" onload="this.classList.add('loaded')"><span>Fast Food</span></div>`;  
-            if (groceryCat) html += `<div class="home-category-item cat-grocery" data-category-id="${groceryCat.id}" data-category-name="${groceryCat.name}"><img src="${groceryCat.imageUrl}" alt="${groceryCat.name}" loading="lazy" onload="this.classList.add('loaded')"><span>Grocery</span></div>`;  
-            container.innerHTML = html || `<p style="grid-column: 1 / -1; text-align: center;">Categories unavailable</p>`;  
+            
+            if (allCategories.length === 0) {
+                container.innerHTML = '<p style="padding: 1rem; text-align: center;">Loading categories...</p>';
+                return;
+            }
+            
+            let html = allCategories.map(cat => {
+                return `<div class="category-scroll-item" data-category-id="${cat.id}" data-category-name="${cat.name}">
+                    <img src="${cat.imageUrl}" alt="${cat.name}" loading="lazy" onload="this.classList.add('loaded')">
+                    <span>${cat.name}</span>
+                </div>`;
+            }).join('');
+            
+            container.innerHTML = html;  
         };  
 
         const startAppListeners = () => {  
@@ -2184,7 +2317,10 @@
             });  
             onValue(ref(db, 'categories'), (snapshot) => {  
                 allCategories = snapshot.exists() ? Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] })) : [];  
-                renderHomeCategoryScroller(); updateCurrentView();  
+                renderHomeCategoryScroller(); 
+                // Also render categories page if active
+                if (window.location.hash === '#categories') renderCategoriesPage();
+                updateCurrentView();  
             });  
             onValue(ref(db, 'app_config/shop_status'), (snapshot) => { 
                 // Default fallback if DB is empty
@@ -2239,6 +2375,7 @@
             if(b==='#home')renderHomePage();   
             else if(b==='#search')renderSearchPage();   
             else if(b==='#favourites')renderFavourites();   
+            else if(b==='#categories')renderCategoriesPage();   
             else if(b==='#product'&&p.has('id'))renderProductDetailPage(p.get('id'), p.get('r_link')); // Pass r_link if present  
             else if(b==='#category'&&p.has('id'))renderCategoryProductsPage(p.get('id'), p.get('name'));   
             else if(b==='#checkout')renderCheckoutPage();   
@@ -2327,6 +2464,9 @@
             else if(b==='#checkout-address'){t=document.getElementById('checkout-address-page');} 
             else if(b==='#checkout-summary'){t=document.getElementById('checkout-summary-page');} 
             else if(b==='#checkout-payment'){t=document.getElementById('checkout-payment-page');} 
+
+            // NEW: Categories Page
+            else if(b==='#categories'){t=document.getElementById('categories-page');} 
 
             // RESELLING IDS
             else if(b==='#reselling-join'){t=document.getElementById('reselling-join-page');}
@@ -2440,15 +2580,63 @@
             if (hasVariants) { document.getElementById('product-variant-select').addEventListener('change', (e) => updateVariantDetails(e.target.value)); }  
         };  
 
+        // MODIFIED: Home page now shows ALL products (no filter)
         const renderHomePage = () => {   
-            const allowed = ["Fast Food", "Grocery"]; const filtered = allProducts.filter(p => allowed.some(a => (p.categoryName && p.categoryName.toLowerCase().includes(a.toLowerCase()))));  
-            const shuffled = [...filtered].sort(()=>0.5-Math.random());   
-            productGrid.innerHTML = shuffled.length > 0 ? shuffled.map(p=>createProductCardHtml(p)).join('') : '<p class="empty-list-message" style="grid-column: 1 / -1;">loading products...</p>';  
+            // Show all approved products, shuffled for variety
+            const shuffled = [...allProducts].sort(()=>0.5-Math.random());   
+            productGrid.innerHTML = shuffled.length > 0 ? shuffled.map(p=>createProductCardHtml(p)).join('') : '<p class="empty-list-message" style="grid-column: 1 / -1;">No products available.</p>';  
         };  
+
+        // NEW: Render categories page (Meesho style grid with search)
+        const renderCategoriesPage = () => {
+            const grid = document.getElementById('categories-grid');
+            if (!grid) return;
+            
+            if (allCategories.length === 0) {
+                grid.innerHTML = '<p class="empty-list-message">No categories found.</p>';
+                return;
+            }
+            
+            // Initial render of all categories
+            renderFilteredCategories('');
+
+            // Add live search listener if not already added
+            const searchInput = document.getElementById('category-search');
+            if (searchInput) {
+                // Remove old listener to avoid duplicates
+                const newSearchInput = searchInput.cloneNode(true);
+                searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+                newSearchInput.addEventListener('input', (e) => {
+                    renderFilteredCategories(e.target.value.trim().toLowerCase());
+                });
+            }
+        };
+
+        function renderFilteredCategories(filterText) {
+            const grid = document.getElementById('categories-grid');
+            if (!grid) return;
+            
+            const filtered = allCategories.filter(cat => 
+                cat.name.toLowerCase().includes(filterText)
+            );
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p class="empty-list-message" style="grid-column: 1 / -1; padding: 2rem;">No matching categories</p>';
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(cat => {
+                return `<div class="category-card-meesho" data-category-id="${cat.id}" data-category-name="${cat.name}">
+                    <img src="${cat.imageUrl}" alt="${cat.name}" loading="lazy" onload="this.classList.add('loaded')">
+                    <span>${cat.name}</span>
+                </div>`;
+            }).join('');
+        }
+
         const renderSearchPage = () => { actualSearchInput.value=''; actualSearchInput.focus(); searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; };  
         const handleSearchInput = () => {   
             const s=actualSearchInput.value.toLowerCase().trim(); if(s.length<1){ searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; return; }   
-            const f = allProducts.filter(p => p.name.toLowerCase().includes(s) && ["Fast Food", "Grocery"].some(a => (p.categoryName || '').toLowerCase().includes(a.toLowerCase())));  
+            const f = allProducts.filter(p => p.name.toLowerCase().includes(s));  
             searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${s}".</p>` : f.map(p => createProductCardHtml(p)).join('');   
         };  
         const renderCategoryProductsPage = (id, name) => { document.getElementById('category-products-title').textContent=decodeURIComponent(name||'Category'); const p=allProducts.filter(pr=>pr.categoryId===id); document.getElementById('category-product-grid').innerHTML=p.length===0?'<p class="empty-list-message">No products in this category.</p>':p.map(pr=>createProductCardHtml(pr)).join(''); };  
@@ -3804,7 +3992,7 @@
                 if (!currentUser) { showToast('Log in to checkout', 'error'); window.location.hash = '#auth'; return; } window.location.hash = '#checkout-address';  
             } else if (e.target.id === 'apply-discount-btn') { const i = document.getElementById('discount-code-input'); if (!i) return; const c = i.value.trim().toUpperCase(); if (!c) { showToast('Enter code', 'error'); return; } if (!currentUser) { showToast('Log in to use discounts', 'error'); window.location.hash = '#auth'; return; } if (userUsedDiscounts[c]) { showToast('Code already used', 'error'); return; } if (validDiscounts[c]) { appliedDiscount = c; updateCartSummary(); showToast('Discount applied!'); } else { showToast('Invalid code', 'error'); }  
             } else if (e.target.closest('#logout-link')) { e.preventDefault(); handleLogout();  
-            } else { const card = e.target.closest('.product-card, .category-card, .wishlist-item-clickable, .home-category-item, .order-card, .fk-order-card'); if (card && !e.target.closest('[data-action]')) { if (card.matches('.product-card, .wishlist-item-clickable')) window.location.hash = `#product?id=${card.dataset.id}`; else if (card.matches('.category-card, .home-category-item')) window.location.hash = `#category?id=${card.dataset.categoryId}&name=${encodeURIComponent(card.dataset.categoryName)}`; else if (card.matches('.order-card, .fk-order-card')) window.location.hash = `#order?id=${card.dataset.orderId}`; } }  
+            } else { const card = e.target.closest('.product-card, .category-card-meesho, .wishlist-item-clickable, .home-category-item, .order-card, .fk-order-card, .category-scroll-item'); if (card && !e.target.closest('[data-action]')) { if (card.matches('.product-card, .wishlist-item-clickable')) window.location.hash = `#product?id=${card.dataset.id}`; else if (card.matches('.category-card-meesho, .home-category-item, .category-scroll-item')) window.location.hash = `#category?id=${card.dataset.categoryId}&name=${encodeURIComponent(card.dataset.categoryName)}`; else if (card.matches('.order-card, .fk-order-card')) window.location.hash = `#order?id=${card.dataset.orderId}`; } }  
         });  
 
         document.getElementById('profile-form').addEventListener('submit', async (e) => { e.preventDefault(); if (!currentUser) return; try { const p = { name: e.target['profile-name'].value, email: e.target['profile-email'].value }; await update(ref(db, `users/${currentUser.phone}/profile`), p); currentUser.profile = p; showToast('Profile updated!'); } catch (e) { showToast('Update failed.', 'error'); } });  
