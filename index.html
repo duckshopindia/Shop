@@ -2,7 +2,7 @@
 <html lang="en">  
 <head>
     <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
     <title>DuckShop</title>  
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkR1Y2tTaG9wIiwKICAic2hvcnRfbmFtZSI6ICJEdWNrU2hvcCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMyODc0ZjAiCn0=">
     <link rel="preconnect" href="https://i.ibb.co">  
@@ -14,7 +14,7 @@
 
     <style>  
         /* =================================================================  
-           ECOMMERCE-STYLE CSS  
+           ECOMMERCE-STYLE CSS - FLIPKART INSPIRED
            ================================================================= */  
           
         :root {  
@@ -29,10 +29,10 @@
             --theme-price: #388e3c;  
             --theme-strike: #878787;  
             --theme-border: #e0e0e0;  
-            --theme-card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);  
+            --theme-card-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);  
             --theme-header-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);  
-            --border-radius: 2px;  
-            --transition-speed: 0.3s;  
+            --border-radius: 6px;  
+            --transition-speed: 0.2s;  
             --star-color: #ffc107;  
             --offer-color: #ff6161;  
             --offer-gradient: linear-gradient(135deg, #ff6161, #ff8761);  
@@ -53,20 +53,17 @@
             padding: 0;  
         }  
 
-        html { scroll-behavior: smooth; }  
+        html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }  
         body { font-family: 'Roboto', 'Poppins', sans-serif; background-color: var(--theme-light-gray); color: var(--theme-text); line-height: 1.4; font-size: 14px; padding-bottom: 0; }  
         .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }  
 
+        /* INSTANT IMAGE LOADING (Removed opacity transition for speed) */
         img {  
             max-width: 100%;  
             height: auto;  
             display: block;  
-            opacity: 0;  
-            will-change: opacity;  
-            transition: opacity 0.3s ease-in-out;  
+            /* Removed opacity: 0 for instant visibility */
         }  
-          
-        img.loaded { opacity: 1; }  
 
         /* FORCE IMAGE VISIBILITY FOR DYNAMIC CONTENT */
         .list-item img, 
@@ -82,7 +79,7 @@
         /* PREMIUM SKELETON LOADING SYSTEM */
         .premium-skeleton-card {
             background-color: #fff;
-            border-radius: 4px;
+            border-radius: 8px;
             border: 1px solid var(--theme-border);
             padding: 10px;
             display: flex;
@@ -126,9 +123,7 @@
         .home-search-trigger { background-color: var(--theme-light-gray); border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; color: var(--theme-secondary-text); cursor: pointer; width: 100%; }  
         .home-search-trigger i { font-size: 1.1rem; }  
           
-        /* ================================================================
-           NEW HORIZONTAL CATEGORY SCROLLER (FLIPKART STYLE)
-           ================================================================ */
+        /* CATEGORY HORIZONTAL SCROLLER */
         .category-scroll-container {
             display: flex;
             overflow-x: auto;
@@ -176,8 +171,6 @@
             text-overflow: ellipsis;
             font-weight: 500;
         }
-
-        /* REMOVED old category scroller styles (home-category-item) */
           
         #home-page .page-content { padding: 1rem; }  
         #home-page .page-title, #categories-page .page-title, #favourites-page .page-title, #about-page .page-title { padding-top: 1rem; }  
@@ -188,7 +181,47 @@
         /* SEARCH & SIDE MENU */  
         #search-page .search-header { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; background-color: white; box-shadow: var(--theme-header-shadow); position: sticky; top: 0; z-index: 1000; }  
         #search-page .back-btn { font-size: 1.2rem; color: var(--theme-text); }  
-        #search-page #actual-search-input { width: 100%; border: none; outline: none; font-size: 1rem; font-family: 'Poppins', sans-serif; }  
+        
+        .search-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        #search-page #actual-search-input { width: 100%; border: none; outline: none; font-size: 1rem; font-family: 'Poppins', sans-serif; padding: 5px; }  
+        
+        /* REAL TIME SEARCH SUGGESTIONS */
+        #search-suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border-radius: 0 0 8px 8px;
+            z-index: 1001;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border-top: 1px solid #f0f0f0;
+        }
+        .suggestion-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f9f9f9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+            color: var(--theme-blue);
+        }
+        .suggestion-item i {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
         #search-results-grid { padding: 1rem; }  
 
         .side-menu { position: fixed; top: 0; left: 0; width: 280px; max-width: 80%; height: 100%; background-color: #fff; z-index: 2000; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); box-shadow: 0 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; padding-top: 2rem; }  
@@ -206,7 +239,7 @@
         main { padding-bottom: 90px; min-height: calc(100vh - 250px); }  
         #home-page.active main { padding-top: 0; }  
         .page { display: none; }  
-        .page.active { display: block; animation: fadeIn 0.5s; }  
+        .page.active { display: block; animation: fadeIn 0.3s; }  
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }  
           
         .page-title { text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 600; color: var(--theme-text); text-transform: uppercase; letter-spacing: 0.5px; }  
@@ -220,16 +253,55 @@
         .product-swiper .swiper-slide img { max-width: 100%; max-height: 100%; object-fit: contain; width: auto; height: auto; }  
         .product-swiper .swiper-pagination-bullet { background: #c2c2c2; opacity: 1; width: 6px; height: 6px; margin: 0 4px; }  
         .product-swiper .swiper-pagination-bullet-active { background: var(--theme-blue); }  
-        .product-detail-info h1 { font-size: 1.4rem; margin-bottom: 0.5rem; line-height: 1.3; color: var(--theme-text); font-weight: 500; }  
+        .product-detail-info h1 { font-size: 1.4rem; margin-bottom: 0.5rem; line-height: 1.3; color: var(--theme-text); font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }  
         .product-detail-price { font-size: 1.8rem; color: var(--theme-text); font-weight: 600; margin-bottom: 0.5rem; }  
         .product-detail-price-container { display: flex; align-items: baseline; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }  
         .product-detail-price-original { text-decoration: line-through; color: var(--theme-strike); font-size: 1rem; }  
         .product-detail-discount-badge { color: var(--theme-green); font-size: 1rem; font-weight: 600; }  
-        .product-detail-desc { margin-bottom: 1.5rem; color: var(--theme-secondary-text); line-height: 1.6; border-top: 1px solid #f0f0f0; padding-top: 1rem; }  
-        .product-stock-status { font-weight: 600; margin-bottom: 1.5rem; font-size: 1rem; padding: 0.75rem; border-radius: 4px; text-align: center; }  
+        
+        /* Product Description Preserved */
+        .product-detail-desc { 
+            margin-bottom: 1.5rem; 
+            color: #000000; 
+            line-height: 1.4; 
+            border-top: 1px solid #f0f0f0; 
+            padding-top: 1rem; 
+            font-family: inherit;
+        }  
+        
+        .product-stock-status { font-weight: 600; margin-bottom: 1rem; font-size: 1rem; padding: 0.75rem; border-radius: 4px; text-align: center; }  
         .product-stock-status.stock-high { background-color: #e8f5e9; color: var(--theme-green); border: 1px dashed var(--theme-green); }  
         .product-stock-status.stock-low { background-color: #fff3e0; color: #f57c00; border: 1px dashed #f57c00; }  
         .product-stock-status.stock-out { background-color: #ffebee; color: var(--theme-orange); border: 1px dashed var(--theme-orange); }  
+        
+        /* Product Service Badges */
+        .product-service-badges {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .service-badge-item {
+            background: #f9f9f9;
+            padding: 10px 5px;
+            border-radius: 8px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #eee;
+            color: #555;
+        }
+        .service-badge-item i {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+        .service-badge-item.cod i { color: var(--theme-green); }
+        .service-badge-item.noreturn i { color: var(--theme-orange); }
+        .service-badge-item.delivery i { color: var(--theme-blue); }
+
         #product-detail-actions .btn { width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600; border-radius: 2px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.2); }  
         .product-detail-secondary-actions { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 10px; }  
         .fav-btn-floating { width: 36px; height: 36px; border-radius: 50%; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #e0e0e0; color: #c2c2c2; transition: 0.2s; }  
@@ -256,13 +328,13 @@
         @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem; } }  
         @media (min-width: 992px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }  
 
-        .product-card { border: 1px solid var(--theme-border); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative; background: white; content-visibility: auto; padding: 0.5rem; }  
-        .product-card:hover { box-shadow: 0 3px 6px rgba(0,0,0,0.1); }  
+        .product-card { border: 1px solid var(--theme-border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative; background: white; content-visibility: auto; padding: 0.5rem; transition: transform 0.2s; }  
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }  
         .product-card.out-of-stock { opacity: 0.7; }  
         .product-stock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: 700; color: var(--theme-orange); z-index: 2; pointer-events: none; }  
         .product-image { width: 100%; height: 140px; object-fit: contain; margin-bottom: 0.5rem; }  
         .product-info { display: flex; flex-direction: column; flex-grow: 1; }  
-        .product-name { font-size: 14px; font-weight: 400; margin-bottom: 4px; color: #212121; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; height: 40px; }  
+        .product-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; color: #212121; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; height: 40px; }  
         .product-category { font-size: 0.75rem; color: var(--theme-secondary-text); margin-bottom: 0.25rem; }  
         .product-price { font-size: 1rem; font-weight: 600; color: var(--theme-text); }  
         .product-price-container { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem; }  
@@ -274,9 +346,79 @@
         .product-actions .icon-btn.active { color: var(--theme-orange); border-color: transparent; }  
         .product-actions .icon-btn.share-btn { color: var(--theme-blue); }
           
+        /* VEG / NON-VEG TAGS */
+        .food-tag {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 1px solid;
+            padding: 2px;
+            margin-right: 5px;
+            vertical-align: middle;
+            margin-bottom: 3px;
+        }
+        .food-tag-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: auto;
+        }
+        .tag-veg { border-color: #2e7d32; }
+        .tag-veg .food-tag-dot { background-color: #2e7d32; }
+        
+        .tag-nonveg { border-color: #b71c1c; }
+        .tag-nonveg .food-tag-dot { background-color: #b71c1c; }
+
         /* =================================================================
-           M E E S H O   S T Y L E   C A T E G O R I E S   P A G E
+           NEW FLIPKART STYLE HORIZONTAL SLIDING (Enhanced)
            ================================================================= */
+        .sub-category-group {
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 10px 0;
+            border-top: 1px solid #f1f1f1;
+        }
+        .sub-category-title {
+            font-size: 16px;
+            font-weight: 600;
+            padding: 0 16px 10px 16px;
+            color: var(--theme-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sub-cat-swiper {
+            padding: 0 0 16px 16px; /* Right padding handled by slide spacing */
+            overflow: visible; /* Allows peek effect */
+        }
+        /* Ensure the Swiper container clips correctly at screen edge but allows scrolling */
+        .sub-category-group .swiper {
+            padding-right: 16px; /* Space on right for end of list */
+        }
+        .sub-cat-swiper .swiper-slide {
+            width: 150px; /* Fixed narrow width for mobile slide effect */
+            height: auto;
+            /* No margin right here, handled by spaceBetween in JS */
+        }
+        /* Make product card smaller in slider */
+        .sub-cat-swiper .product-card {
+            height: 100%;
+            padding: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Lighter shadow for list */
+        }
+        .sub-cat-swiper .product-image {
+            height: 100px;
+        }
+        .sub-cat-swiper .product-name {
+            font-size: 12px;
+            height: 34px;
+            margin-bottom: 2px;
+        }
+        .sub-cat-swiper .product-price {
+            font-size: 0.9rem;
+        }
+
+        /* MEESHO STYLE CATEGORIES PAGE */
         .categories-header {
             background: white;
             padding: 12px 16px;
@@ -817,16 +959,50 @@
         .location-capture-badge.not-captured { background: #ff5757; color: white; }
         .location-capture-badge.captured { background: #4ade80; color: white; }
         
-        /* WELCOME PAGE STYLES */
-        .welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2500; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
-        .welcome-screen img { width: 120px; height: 120px; margin-bottom: 20px; }
-        .welcome-title { font-size: 2rem; font-weight: 700; color: var(--theme-text); margin-bottom: 0.5rem; }
-        .welcome-title span { color: var(--theme-green); }
-        .welcome-text { color: var(--theme-secondary-text); margin-bottom: 3rem; text-align: center; }
-        .welcome-btn { width: 100%; max-width: 300px; padding: 1rem; border-radius: 5px; font-weight: 600; text-align: center; margin-bottom: 1rem; cursor: pointer; transition: 0.3s; }
-        .btn-login { background: var(--theme-blue); color: white; border: none; }
-        .btn-explore { background: white; color: var(--theme-blue); border: 2px solid var(--theme-blue); }
-        
+        /* PREMIUM SPLASH SCREEN (Replaces Welcome Page) */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff; /* WHITE BACKGROUND */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-out;
+        }
+        .splash-content {
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        /* REMOVED BAG ICON, JUST TEXT LOGO */
+        .splash-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #000000; /* DUCK IS BLACK */
+        }
+        .splash-text span {
+            color: var(--theme-green); /* SHOP IS GREEN */
+        }
+        .splash-loader {
+            margin-top: 2rem;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--theme-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .splash-hidden { opacity: 0; pointer-events: none; }
+
 
         @media (max-width: 767px) {  
             .page-title { font-size: 1.3rem; }  
@@ -1364,6 +1540,15 @@
 
 </head>  
 <body>  
+    <!-- PREMIUM SPLASH SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <!-- Text Logo Only: Duck (Black), Shop (Green) -->
+            <div class="splash-text">Duck<span>Shop</span></div>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
     <!-- SLIDE-IN SIDE MENU -->  
     <div id="menu-overlay" class="menu-overlay"></div>  
     <nav id="side-menu" class="side-menu">  
@@ -1405,20 +1590,6 @@
     </header>  
       
     <main>  
-        <!-- WELCOME PAGE (FLIPKART STYLE) -->
-        <section id="welcome-page" class="page">
-            <div class="welcome-screen">
-                <div style="font-size: 4rem; color: var(--theme-blue); margin-bottom: 1rem;">
-                    <i class="fas fa-shopping-bag"></i>
-                </div>
-                <div class="welcome-title">Duck<span>Shop</span></div>
-                <p class="welcome-text">Best Products, Best Prices, Fast Delivery.</p>
-                
-                <button class="welcome-btn btn-login" onclick="window.location.hash='#auth'">Login / Register</button>
-                <button class="welcome-btn btn-explore" onclick="window.location.hash='#home'">Explore</button>
-            </div>
-        </section>
-
         <!-- Home Page -->  
         <section id="home-page" class="page active">  
             <div class="home-specific-header">  
@@ -1454,17 +1625,33 @@
         <section id="search-page" class="page">  
             <div class="search-header">  
                 <a href="#home" class="back-btn"><i class="fas fa-arrow-left"></i></a>  
-                <input type="search" id="actual-search-input" placeholder="Search for products...">  
+                <div class="search-input-wrapper">
+                    <input type="search" id="actual-search-input" placeholder="Search for products..." autocomplete="off">
+                    <!-- Real-Time Suggestions Box -->
+                    <div id="search-suggestions-box"></div>
+                </div>
             </div>  
             <div id="search-results-grid" class="product-grid">  
                  <p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search for products.</p>  
             </div>  
         </section>  
 
-        <!-- Category Products Page -->  
+        <!-- Category Products Page - UPDATED STRUCTURE -->  
         <section id="category-products-page" class="page">  
-            <h1 id="category-products-title" class="page-title"></h1>  
-            <div id="category-product-grid" class="product-grid"></div>  
+            <!-- Sticky Category Header -->
+            <div class="categories-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                     <h1 id="category-products-title" style="font-size:1.2rem; font-weight:700;">Category</h1>
+                     <a href="#categories" style="font-size:0.9rem;">View All</a>
+                </div>
+                <div class="categories-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="sub-category-search" placeholder="Search inside this category">
+                </div>
+            </div>
+            
+            <!-- New Container for Sub-Categories -->
+            <div id="category-content-container"></div>
         </section>  
 
         <!-- Categories Page (Meesho Style) -->  
@@ -2092,11 +2279,11 @@
         const ADMIN_PHONE = "ADMIN_PHONE_HERE";  
           
         let allProducts = [];  
-        let allCategories = [];  
+        let allCategories =[];  
         let allOrders = {};   
         let currentUser = null;   
         let userCart = {};  
-        let userFavourites = [];  
+        let userFavourites =[];  
         let appliedDiscount = null;  
         let validDiscounts = {};  
         let userUsedDiscounts = {};  
@@ -2113,6 +2300,7 @@
           
         let bannerInstance = null;  
         let productSwiperInstance = null;  
+        let categorySwipers =[]; // Store multiple swipers for category page
             
         let selectedPaymentMethod = 'cod';   
         // UPDATED: shopStatus defaults with time logic support
@@ -2139,6 +2327,7 @@
         const homeSearchTrigger = document.getElementById('home-search-trigger');  
         const actualSearchInput = document.getElementById('actual-search-input');  
         const searchResultsGrid = document.getElementById('search-results-grid');  
+        const searchSuggestionsBox = document.getElementById('search-suggestions-box');
 
         const showToast = (message, type = 'success') => {  
             const toast = document.getElementById('toast-notification');  
@@ -2313,10 +2502,18 @@
             onValue(ref(db, 'products'), (snapshot) => {  
                 const productsFromDB = snapshot.val() || {};  
                 allProducts = Object.keys(productsFromDB).map(key => ({ id: key, ...productsFromDB[key] })).filter(p => p.status === 'approved' || typeof p.status === 'undefined');  
-                updateCurrentView();  
+                updateCurrentView(); 
+                
+                // Hide splash after initial load if this is the first load
+                const splash = document.getElementById('splash-screen');
+                if(splash && !splash.classList.contains('splash-hidden')) {
+                    setTimeout(() => {
+                        splash.classList.add('splash-hidden');
+                    }, 2000); // 2 seconds minimum display
+                }
             });  
             onValue(ref(db, 'categories'), (snapshot) => {  
-                allCategories = snapshot.exists() ? Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] })) : [];  
+                allCategories = snapshot.exists() ? Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] })) :[];  
                 renderHomeCategoryScroller(); 
                 // Also render categories page if active
                 if (window.location.hash === '#categories') renderCategoriesPage();
@@ -2410,17 +2607,10 @@
         const handleRouting = async () => {   
             const h=window.location.hash||'#home'; const [b,q]=h.split('?'); const p=new URLSearchParams(q);  
             
-            // Welcome Page Logic
-            if(b === '#welcome') {
-                document.getElementById('welcome-page').classList.add('active');
-                document.querySelector('.header').style.display = 'none';
-                document.querySelector('.bottom-nav').style.display = 'none';
-                pages.forEach(pg => { if(pg.id !== 'welcome-page') pg.classList.remove('active'); });
-                return;
-            } else {
-                 document.querySelector('.header').style.display = ''; // Reset
-                 document.querySelector('.bottom-nav').style.display = 'flex'; // Reset
-            }
+            // Welcome/Splash Logic - Handled by Splash Screen Div
+            // Reset Layout
+            document.querySelector('.header').style.display = ''; 
+            document.querySelector('.bottom-nav').style.display = 'flex';
 
             if (b === '#order-confirmation') { const audio = document.getElementById('success-sound'); if(audio) { audio.currentTime = 0; audio.play().catch(e => console.log(e)); } const animContainer = document.querySelector('.success-animation'); if(animContainer) { const html = animContainer.innerHTML; animContainer.innerHTML = ''; void animContainer.offsetWidth; animContainer.innerHTML = html; } }  
             if (!['#find-account', '#enter-old-password', '#new-password', '#contact-for-old-password'].includes(b)) { passwordRecoveryUserPhone = null; }  
@@ -2428,7 +2618,6 @@
             let t;   
             
             // CHECK FOR RESELLING LINK (ASYNC LOAD)
-            // If viewing a product with r_link, show loading skeleton instantly to prevent price glitch
             if(b==='#product' && p.has('r_link')) {
                  t=document.getElementById('product-detail-page');
                  t.classList.add('active');
@@ -2483,7 +2672,7 @@
 
             updateCurrentView();   
             document.querySelectorAll('.nav-link, .side-menu-link').forEach(l=>{ const lh=l.getAttribute('href'); l.classList.toggle('active',(lh===b)||(b==='#category'&&lh==='#categories')||(b==='#order'&&lh==='#orders')||(b==='#reselling-dashboard'&&lh.startsWith('#resell'))); });   
-            const protectedRoutes = ['#orders', '#profile', '#checkout', '#payment', '#order', '#order-confirmation', '#reselling-dashboard', '#reselling-create', '#reselling-link-details'];  
+            const protectedRoutes =['#orders', '#profile', '#checkout', '#payment', '#order', '#order-confirmation', '#reselling-dashboard', '#reselling-create', '#reselling-link-details'];  
             if(protectedRoutes.some(route => b.startsWith(route)) && !currentUser){ window.location.hash='#auth'; showToast('Please log in.','error'); }   
             document.querySelector('.main-nav.active')?.classList.remove('active');   
             window.scrollTo(0,0);   
@@ -2497,7 +2686,19 @@
             if(displayOriginalPrice&&displayOriginalPrice>displayPrice){priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span><span class="product-price-original">${formatCurrency(displayOriginalPrice)}</span>${displayDiscountPercent?`<span class="product-discount-badge">${displayDiscountPercent}% OFF</span>`:''}</div>`;}else{priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span></div>`;}   
             const cardImageUrl=(Array.isArray(product.imageUrls)&&product.imageUrls.length>0)?product.imageUrls[0]:product.imageUrl;   
             
-            return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${product.name}</h3><p class="product-category">${product.categoryName||'Uncategorized'}</p>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;   
+            // --- AUTOMATIC VEG/NON-VEG TAG LOGIC (DB DRIVEN) ---
+            let tagHtml = '';
+            // Checks for 'foodType' property: 'veg', 'non-veg', or 'none'/'undefined'
+            if (product.foodType) {
+                const type = product.foodType.toLowerCase();
+                if (type === 'veg') {
+                    tagHtml = `<div class="food-tag tag-veg"><div class="food-tag-dot"></div></div>`;
+                } else if (type === 'non-veg' || type === 'nonveg') {
+                    tagHtml = `<div class="food-tag tag-nonveg"><div class="food-tag-dot"></div></div>`;
+                }
+            }
+
+            return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3><p class="product-category">${product.categoryName||'Uncategorized'}</p>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;   
         };  
           
         const renderProductDetailPage = (productId, r_link = null) => {  
@@ -2507,23 +2708,64 @@
             const isFavourited = userFavourites.includes(product.id);  
             const imageUrls = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl];  
             if (productSwiperInstance !== null) { productSwiperInstance.destroy(true, true); productSwiperInstance = null; }  
-            const variants = product.variants || []; const hasVariants = product.hasVariants && variants.length > 0;  
+            const variants = product.variants ||[]; const hasVariants = product.hasVariants && variants.length > 0;  
             
             // GENERATE 5 DIGIT ID
             const shortId = getShortProductId(product.id);
 
+            // --- AUTOMATIC VEG/NON-VEG TAG LOGIC FOR DETAIL PAGE ---
+            let tagHtml = '';
+            if (product.foodType) {
+                const type = product.foodType.toLowerCase();
+                if (type === 'veg') {
+                    tagHtml = `<div class="food-tag tag-veg" style="width:18px; height:18px; padding:3px; margin-right:8px;"><div class="food-tag-dot" style="width:10px; height:10px;"></div></div>`;
+                } else if (type === 'non-veg' || type === 'nonveg') {
+                    tagHtml = `<div class="food-tag tag-nonveg" style="width:18px; height:18px; padding:3px; margin-right:8px;"><div class="food-tag-dot" style="width:10px; height:10px;"></div></div>`;
+                }
+            }
+
             // ADDED SHARE BUTTON TO DETAIL PAGE
-            container.innerHTML = `<div class="product-detail-layout"><div class="product-detail-image-container"><div class="product-detail-secondary-actions"><div class="fav-btn-floating share-btn-floating" data-action="share-product-detail" data-id="${product.id}"><i class="fas fa-share-alt"></i></div><div class="fav-btn-floating ${isFavourited ? 'active' : ''}" data-action="toggle-favourite" data-id="${product.id}"><i class="fas fa-heart"></i></div></div><div class="swiper product-swiper"><div class="swiper-wrapper">${imageUrls.map(url => `<div class="swiper-slide"><img src="${url}" alt="${product.name}" loading="lazy" onload="this.classList.add('loaded')"></div>`).join('')}</div><div class="swiper-pagination"></div></div></div><div class="product-detail-info"><h1>${product.name}</h1>
+            container.innerHTML = `<div class="product-detail-layout"><div class="product-detail-image-container"><div class="product-detail-secondary-actions"><div class="fav-btn-floating share-btn-floating" data-action="share-product-detail" data-id="${product.id}"><i class="fas fa-share-alt"></i></div><div class="fav-btn-floating ${isFavourited ? 'active' : ''}" data-action="toggle-favourite" data-id="${product.id}"><i class="fas fa-heart"></i></div></div><div class="swiper product-swiper"><div class="swiper-wrapper">${imageUrls.map(url => `<div class="swiper-slide"><img src="${url}" alt="${product.name}" loading="lazy" onload="this.classList.add('loaded')"></div>`).join('')}</div><div class="swiper-pagination"></div></div></div><div class="product-detail-info"><h1>${tagHtml}${product.name}</h1>
             
             <!-- PRODUCT ID DISPLAY -->
             <div class="product-id-badge" onclick="navigator.clipboard.writeText('${shortId}').then(() => showToast('ID Copied!'))">
                 ID: <strong>${shortId}</strong> <i class="far fa-copy"></i>
             </div>
 
-            <div id="price-container"></div>${hasVariants ? `<div class="form-group"><label for="product-variant-select">Select Option:</label><select id="product-variant-select" class="form-control" style="width: 100%; padding: 0.6rem; border: 1px solid var(--theme-border); border-radius: 4px;">${variants.map((v, index) => `<option value="${index}">${v.name}</option>`).join('')}</select></div>` : ''}<div id="stock-container"></div><div id="product-detail-actions"></div><div class="product-detail-desc">${product.description || ''}</div></div></div><div id="related-products-container"></div>`;  
+            <div id="price-container"></div>${hasVariants ? `<div class="form-group"><label for="product-variant-select">Select Option:</label><select id="product-variant-select" class="form-control" style="width: 100%; padding: 0.6rem; border: 1px solid var(--theme-border); border-radius: 4px;">${variants.map((v, index) => `<option value="${index}">${v.name}</option>`).join('')}</select></div>` : ''}<div id="stock-container"></div>
+            
+            <!-- NEW: PRODUCT SERVICE BADGES -->
+            <div class="product-service-badges">
+                <div class="service-badge-item cod">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Cash On Delivery</span>
+                </div>
+                <div class="service-badge-item noreturn">
+                    <i class="fas fa-ban"></i>
+                    <span>No Return</span>
+                </div>
+                <div class="service-badge-item delivery">
+                    <i class="fas fa-truck"></i>
+                    <span>Home Delivery</span>
+                </div>
+            </div>
+
+            <div id="product-detail-actions"></div><div class="product-detail-desc">${product.description || ''}</div></div></div><div id="related-products-container"></div>`;  
             productSwiperInstance = new Swiper(".product-swiper", { slidesPerView: 1, spaceBetween: 0, pagination: { el: ".swiper-pagination", clickable: true }, });  
-            const relatedProductsContainer = document.getElementById('related-products-container'); const relatedProducts = allProducts.filter(p => p.categoryId === product.categoryId && p.id !== productId).sort(() => 0.5 - Math.random()).slice(0, 4);   
-            if (relatedProducts.length > 0) { relatedProductsContainer.innerHTML = `<div class="related-products-section"><h2>Related Products</h2><div id="related-products-grid" class="product-grid">${relatedProducts.map(p => createProductCardHtml(p)).join('')}</div></div>`; }  
+            
+            // UPDATED: Related Products Logic (SubCategory based)
+            const relatedProductsContainer = document.getElementById('related-products-container'); 
+            
+            // Filter products that match sub-category OR main category
+            const relatedProducts = allProducts.filter(p => {
+                if (p.id === productId) return false;
+                // Strong match: same sub-category
+                if (product.subCategory && p.subCategory === product.subCategory) return true;
+                // Weak match: same main category (fallback)
+                return p.categoryId === product.categoryId;
+            }).sort(() => 0.5 - Math.random()).slice(0, 4);   
+            
+            if (relatedProducts.length > 0) { relatedProductsContainer.innerHTML = `<div class="related-products-section"><h2>Similar Products</h2><div id="related-products-grid" class="product-grid">${relatedProducts.map(p => createProductCardHtml(p)).join('')}</div></div>`; }  
             
             const updateVariantDetails = (variantIndex = 0) => {  
                 const priceContainer = document.getElementById('price-container'), stockContainer = document.getElementById('stock-container'), actionsContainer = document.getElementById('product-detail-actions');  
@@ -2633,13 +2875,169 @@
             }).join('');
         }
 
-        const renderSearchPage = () => { actualSearchInput.value=''; actualSearchInput.focus(); searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; };  
+        const renderSearchPage = () => { actualSearchInput.value=''; actualSearchInput.focus(); searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; searchSuggestionsBox.style.display = 'none'; };  
         const handleSearchInput = () => {   
-            const s=actualSearchInput.value.toLowerCase().trim(); if(s.length<1){ searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; return; }   
+            const s = actualSearchInput.value.toLowerCase().trim(); 
+            
+            // REAL-TIME SUGGESTIONS LOGIC
+            if(s.length > 0) {
+                const suggestions = allProducts
+                    .filter(p => p.name.toLowerCase().includes(s) || (p.categoryName && p.categoryName.toLowerCase().includes(s)))
+                    .slice(0, 6); // Limit to 6 suggestions
+                
+                if(suggestions.length > 0) {
+                    searchSuggestionsBox.innerHTML = suggestions.map(p => `
+                        <div class="suggestion-item" data-search-term="${p.name}">
+                            <i class="fas fa-search"></i>
+                            ${p.name}
+                        </div>
+                    `).join('');
+                    searchSuggestionsBox.style.display = 'block';
+                } else {
+                    searchSuggestionsBox.style.display = 'none';
+                }
+            } else {
+                searchSuggestionsBox.style.display = 'none';
+            }
+
+            // Normal Search
+            if(s.length < 1){ searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; return; }   
             const f = allProducts.filter(p => p.name.toLowerCase().includes(s));  
             searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${s}".</p>` : f.map(p => createProductCardHtml(p)).join('');   
         };  
-        const renderCategoryProductsPage = (id, name) => { document.getElementById('category-products-title').textContent=decodeURIComponent(name||'Category'); const p=allProducts.filter(pr=>pr.categoryId===id); document.getElementById('category-product-grid').innerHTML=p.length===0?'<p class="empty-list-message">No products in this category.</p>':p.map(pr=>createProductCardHtml(pr)).join(''); };  
+        
+        // Handle Suggestion Click
+        searchSuggestionsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.suggestion-item');
+            if(item) {
+                const term = item.dataset.searchTerm;
+                actualSearchInput.value = term;
+                searchSuggestionsBox.style.display = 'none';
+                handleSearchInput(); // Trigger search immediately
+            }
+        });
+
+        // =========================================================
+        // MAJOR UPDATE: SMART CATEGORY PAGE (Hybrid Grid/Slider)
+        // =========================================================
+        const renderCategoryProductsPage = (id, name) => { 
+            // 1. Update Header Title
+            document.getElementById('category-products-title').textContent = decodeURIComponent(name || 'Category');
+            
+            const container = document.getElementById('category-content-container');
+            const subSearchInput = document.getElementById('sub-category-search');
+
+            // 2. Clear previous content & swipers
+            categorySwipers.forEach(s => s.destroy(true, true));
+            categorySwipers =[];
+            container.innerHTML = '';
+
+            // 3. Filter products for this main category
+            const categoryProducts = allProducts.filter(pr => pr.categoryId === id);
+            
+            if (categoryProducts.length === 0) {
+                container.innerHTML = '<p class="empty-list-message">No products in this category.</p>';
+                return;
+            }
+
+            // 4. INTELLIGENT LAYOUT DETECTION
+            // Check if products have distinct sub-categories defined
+            const subCategories = [...new Set(categoryProducts.map(p => p.subCategory || ''))].filter(s => s.trim() !== '');
+            const shouldUseSliderLayout = subCategories.length > 0;
+
+            if (shouldUseSliderLayout) {
+                // --- RENDER FLIPKART STYLE SLIDERS ---
+                
+                // Group Products
+                const groupedProducts = {};
+                categoryProducts.forEach(prod => {
+                    const subCat = prod.subCategory || 'Other Products'; 
+                    if (!groupedProducts[subCat]) {
+                        groupedProducts[subCat] = [];
+                    }
+                    groupedProducts[subCat].push(prod);
+                });
+
+                const renderGroups = (filterText = '') => {
+                    let htmlContent = '';
+                    let swiperIndices =[];
+                    let groupIndex = 0;
+
+                    for (const [subCatName, products] of Object.entries(groupedProducts)) {
+                        const filteredProducts = products.filter(p => p.name.toLowerCase().includes(filterText));
+                        
+                        if (filteredProducts.length > 0) {
+                            htmlContent += `
+                            <div class="sub-category-group">
+                                <div class="sub-category-title">
+                                    <span>${subCatName}</span>
+                                    <span style="font-size:12px; color:#888;">${filteredProducts.length} items</span>
+                                </div>
+                                <div class="swiper sub-cat-swiper" id="sub-cat-swiper-${groupIndex}">
+                                    <div class="swiper-wrapper">
+                                        ${filteredProducts.map(p => `
+                                            <div class="swiper-slide">
+                                                ${createProductCardHtml(p)}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>`;
+                            swiperIndices.push(groupIndex);
+                            groupIndex++;
+                        }
+                    }
+
+                    if (htmlContent === '') {
+                        container.innerHTML = '<p class="empty-list-message" style="padding:2rem;">No products match your search.</p>';
+                    } else {
+                        container.innerHTML = htmlContent;
+                        // Initialize Swipers with 'Peek' configuration
+                        swiperIndices.forEach(idx => {
+                            const sw = new Swiper(`#sub-cat-swiper-${idx}`, {
+                                slidesPerView: 'auto', // Allows cards to size naturally based on CSS width
+                                spaceBetween: 12,      // Gap between cards
+                                freeMode: true,        // Allow free scrolling
+                                slidesOffsetAfter: 16, // Padding at end of list
+                            });
+                            categorySwipers.push(sw);
+                        });
+                    }
+                };
+
+                // Initial Render
+                renderGroups('');
+                
+                // Setup Search for Sliders
+                const newSearchInput = subSearchInput.cloneNode(true);
+                subSearchInput.parentNode.replaceChild(newSearchInput, subSearchInput);
+                newSearchInput.addEventListener('input', (e) => {
+                    renderGroups(e.target.value.trim().toLowerCase());
+                });
+
+            } else {
+                // --- RENDER NORMAL GRID (DEFAULT) ---
+                const renderGrid = (filterText = '') => {
+                    const filtered = categoryProducts.filter(p => p.name.toLowerCase().includes(filterText));
+                    if(filtered.length === 0) {
+                         container.innerHTML = '<p class="empty-list-message">No products found.</p>';
+                    } else {
+                        container.innerHTML = `<div class="product-grid" style="padding-top:10px;">
+                            ${filtered.map(p => createProductCardHtml(p)).join('')}
+                        </div>`;
+                    }
+                };
+                
+                renderGrid('');
+                
+                // Setup Search for Grid
+                const newSearchInput = subSearchInput.cloneNode(true);
+                subSearchInput.parentNode.replaceChild(newSearchInput, subSearchInput);
+                newSearchInput.addEventListener('input', (e) => {
+                    renderGrid(e.target.value.trim().toLowerCase());
+                });
+            }
+        };  
           
         const addToCart = async (id,q=1,v=null)=>{   
             // Security check for shop status
@@ -3069,7 +3467,7 @@
                 renderCart(); 
                 renderFavourites(); 
                 updateBadges();
-                window.location.hash = '#welcome';
+                // Removed hash setting to avoid overriding splash
             } 
             handleRouting(); 
         };  
@@ -3113,7 +3511,7 @@
             } catch (e) { showToast('Registration error', 'error'); }  
         };  
 
-        const handleLogout = ()=>{ detachUserListeners(); currentUser=null; resellerData=null; localStorage.removeItem('loggedInUserPhone'); updateUIForAuthState(); loadLocalData(); renderCart(); renderFavourites(); updateBadges(); window.location.hash='#welcome'; showToast('Logged out.'); verifiedAuthPhone = null; };  
+        const handleLogout = ()=>{ detachUserListeners(); currentUser=null; resellerData=null; localStorage.removeItem('loggedInUserPhone'); updateUIForAuthState(); loadLocalData(); renderCart(); renderFavourites(); updateBadges(); window.location.hash='#home'; showToast('Logged out.'); verifiedAuthPhone = null; };  
         const detachUserListeners = ()=>{Object.values(activeListeners).forEach(l=>{if(l.ref && l.callback){off(l.ref,'value',l.callback);}}); activeListeners={};};  
         const attachUserListeners = (p)=>{ 
             detachUserListeners(); 
@@ -3295,8 +3693,7 @@
             if (walletBalance < grandTotal) {
                 walletOption.classList.add('disabled');
                 walletOption.classList.remove('selected');
-                selectedPaymentMethod = 'cod';
-                document.getElementById('payment-cod').classList.add('selected');
+                selectedPaymentMethod = 'cod';document.getElementById('payment-cod').classList.add('selected');
                 walletDisplay.innerHTML += ` <span style="color:red; font-size:0.8rem; display:block;">Insufficient Balance</span>`;
             } else {
                 walletOption.classList.remove('disabled');
