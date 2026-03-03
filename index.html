@@ -54,7 +54,7 @@
         }  
 
         html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }  
-        body { font-family: 'Roboto', 'Poppins', sans-serif; background-color: var(--theme-light-gray); color: var(--theme-text); line-height: 1.4; font-size: 14px; padding-bottom: 0; }  
+        body { font-family: 'Roboto', 'Poppins', sans-serif; background-color: var(--theme-light-gray); color: var(--theme-text); line-height: 1.4; font-size: 14px; padding-bottom: 0; overflow-x: hidden; }  
         .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }  
 
         /* INSTANT IMAGE LOADING (Removed opacity transition for speed) */
@@ -173,7 +173,7 @@
         }
           
         #home-page .page-content { padding: 1rem; }  
-        #home-page .page-title, #categories-page .page-title, #favourites-page .page-title, #about-page .page-title { padding-top: 1rem; }  
+        #home-page .page-title, #categories-page .page-title, #favourites-page .page-title, #about-page .page-title, #policy-page .page-title { padding-top: 1rem; }  
           
         .products-for-you-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--theme-border); }  
         .products-for-you-header h2 { font-size: 1.2rem; font-weight: 600; }  
@@ -370,55 +370,53 @@
         .tag-nonveg .food-tag-dot { background-color: #b71c1c; }
 
         /* =================================================================
-           NEW FLIPKART STYLE HORIZONTAL SLIDING (Enhanced)
+           NEW FLIPKART STYLE HORIZONTAL SLIDING (Enhanced Video Matching)
            ================================================================= */
         .sub-category-group {
-            margin-bottom: 20px;
+            margin-bottom: 8px; /* Creates gray gap */
             background: #fff;
-            padding: 10px 0;
-            border-top: 1px solid #f1f1f1;
+            padding: 16px 0;
+            overflow-x: hidden;
+            width: 100%;
         }
         .sub-category-title {
-            font-size: 16px;
-            font-weight: 600;
-            padding: 0 16px 10px 16px;
-            color: var(--theme-text);
+            font-size: 18px; /* Matched to video */
+            font-weight: 700;
+            padding: 0 16px 12px 16px;
+            color: #212121;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        .sub-category-title span:last-child {
+            font-size: 13px;
+            color: #878787;
+            font-weight: 500;
+        }
         .sub-cat-swiper {
-            padding: 0 0 16px 16px; /* Right padding handled by slide spacing */
-            overflow: visible; /* Allows peek effect */
+            padding: 0 0 16px 0; 
+            overflow: hidden; 
         }
-        /* Ensure the Swiper container clips correctly at screen edge but allows scrolling */
-        .sub-category-group .swiper {
-            padding-right: 16px; /* Space on right for end of list */
-        }
+        /* Fixed width for cards in horizontal swiper */
         .sub-cat-swiper .swiper-slide {
-            width: 150px; /* Fixed narrow width for mobile slide effect */
+            width: 155px;
             height: auto;
-            /* No margin right here, handled by spaceBetween in JS */
         }
-        /* Make product card smaller in slider */
-        .sub-cat-swiper .product-card {
-            height: 100%;
-            padding: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Lighter shadow for list */
+        @media (min-width: 480px) {
+            .sub-cat-swiper .swiper-slide { width: 180px; }
         }
-        .sub-cat-swiper .product-image {
-            height: 100px;
-        }
-        .sub-cat-swiper .product-name {
-            font-size: 12px;
-            height: 34px;
-            margin-bottom: 2px;
-        }
-        .sub-cat-swiper .product-price {
-            font-size: 0.9rem;
+        @media (min-width: 768px) {
+            .sub-cat-swiper .swiper-slide { width: 220px; }
         }
 
-        /* MEESHO STYLE CATEGORIES PAGE */
+        #category-content-container {
+            overflow-x: hidden;
+            width: 100%;
+            background-color: var(--theme-light-gray);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        
         .categories-header {
             background: white;
             padding: 12px 16px;
@@ -1561,6 +1559,7 @@
             <li class="protected-route d-none"><a href="#orders" class="side-menu-link"><i class="fas fa-box"></i> Orders</a></li>  
             <li class="protected-route d-none"><a href="#profile" class="side-menu-link"><i class="fas fa-user"></i> Profile</a></li>  
             <!-- ADDRESS LINK REMOVED -->  
+            <li><a href="#policy" class="side-menu-link"><i class="fas fa-shield-alt"></i> Policies & Terms</a></li>
             <li><a href="#about" class="side-menu-link"><i class="fas fa-info-circle"></i> About</a></li>  
             <li><a href="#contact" class="side-menu-link"><i class="fas fa-phone"></i> Contact</a></li>  
         </ul>  
@@ -1576,6 +1575,7 @@
                     <li><a href="#cart" class="nav-link">Cart</a></li>  
                     <li class="protected-route d-none"><a href="#orders" class="nav-link">Orders</a></li>  
                     <li class="protected-route d-none"><a href="#profile" class="nav-link">Profile</a></li>  
+                    <li><a href="#policy" class="nav-link">Policies</a></li>
                     <li><a href="#about" class="nav-link">About</a></li>  
                     <li><a href="#contact" class="nav-link">Contact</a></li>  
                 </ul>  
@@ -1636,17 +1636,13 @@
             </div>  
         </section>  
 
-        <!-- Category Products Page - UPDATED STRUCTURE -->  
+        <!-- Category Products Page - UPDATED STRUCTURE TO MATCH VIDEO EXACTLY -->  
         <section id="category-products-page" class="page">  
-            <!-- Sticky Category Header -->
-            <div class="categories-header">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                     <h1 id="category-products-title" style="font-size:1.2rem; font-weight:700;">Category</h1>
-                     <a href="#categories" style="font-size:0.9rem;">View All</a>
-                </div>
-                <div class="categories-search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="sub-category-search" placeholder="Search inside this category">
+            <!-- Sticky Category Header (Video Style Search Only) -->
+            <div class="categories-header" style="border-bottom: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div class="categories-search-box" style="background-color: #f1f3f6; border: none; border-radius: 6px;">
+                    <i class="fas fa-search" style="color: #878787; font-size: 1.1rem;"></i>
+                    <input type="text" id="sub-category-search" placeholder="Search inside this category" style="color: #212121; font-weight: 500;">
                 </div>
             </div>
             
@@ -1918,6 +1914,63 @@
                 </a>  
             </div>  
         </section>  
+
+        <!-- Terms & Policies Page (NEW PROFESSIONAL DESIGN ADDED HERE) -->
+        <section id="policy-page" class="page">
+            <h1 class="page-title">Terms & Policies</h1>
+            <div class="about-wrapper" style="max-width: 800px; padding-bottom: 40px;">
+                
+                <!-- Return Policy -->
+                <div class="about-card" style="margin-bottom: 20px;">
+                    <div class="about-section">
+                        <h3 style="color: var(--theme-orange); font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-ban"></i> Return & Replacement Policy
+                        </h3>
+                        <p style="font-size: 0.95rem; margin-top: 10px; color: var(--theme-text);">
+                            DuckShop operates on a strictly <strong>No Return and No Replacement</strong> policy.
+                        </p>
+                        <div class="about-highlight" style="background: #fff3e0; color: #f57c00; border: 1px dashed #f57c00; padding: 15px; margin-top: 15px;">
+                            <strong>2-Step Verification Process:</strong> Our delivery personnel perform a rigorous two-step verification. The delivery executive will meticulously check your ordered items twice before handing the package over to you, ensuring 100% accuracy and quality.
+                        </div>
+                        <p style="font-size: 0.95rem; margin-top: 15px; color: var(--theme-text);">
+                            We encourage our customers to thoroughly verify the product at the time of delivery. Please be informed that no claims for return or replacement will be entertained once the delivery is successfully completed.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Privacy Policy -->
+                <div class="about-card" style="margin-bottom: 20px;">
+                    <div class="about-section">
+                        <h3 style="color: var(--theme-blue); font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user-shield"></i> Privacy Policy
+                        </h3>
+                        <p style="font-size: 0.95rem; margin-top: 10px; color: var(--theme-text);">
+                            Your privacy is of utmost importance to us. The information collected, including your phone number, delivery address, and precise location data, is exclusively used to provide you with a seamless shopping and ultra-fast delivery experience.
+                        </p>
+                        <ul class="about-list" style="margin-top: 15px;">
+                            <li>We strictly do not share, sell, or distribute your personal data to any third parties.</li>
+                            <li>Location data is only captured when you explicitly allow it to access your current location, so that your order can be delivered to you as quickly as possible.</li>
+                            <li>Your Duck Wallet data is kept completely private and linked securely to your verified phone number.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div class="about-card">
+                    <div class="about-section">
+                        <h3 style="color: var(--theme-green); font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-lock"></i> Security Terms
+                        </h3>
+                        <p style="font-size: 0.95rem; margin-top: 10px; color: var(--theme-text);">
+                            DuckShop is committed to ensuring that your information is fully secure. We use advanced, industry-standard security protocols to prevent unauthorized access, disclosure, or modification of your personal information.
+                        </p>
+                        <p style="font-size: 0.95rem; margin-top: 10px; color: var(--theme-text);">
+                            All interactions with our database, including authentication, payment handling, and order placements, are strictly encrypted and protected by Google's robust architecture. You can shop with total confidence.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- About Page (UPDATED WITH NEW CODE) -->  
         <section id="about-page" class="page">  
@@ -2212,6 +2265,13 @@
     <footer class="footer">  
         <div class="container">  
             <div class="social-links" id="social-links-container"></div>  
+            <div style="margin-bottom: 1rem;">
+                <a href="#policy" style="color: var(--theme-secondary-text); font-size: 0.85rem; text-decoration: none; margin: 0 10px; font-weight: 500;">Terms & Conditions</a>
+                <span style="color: var(--theme-secondary-text);">|</span>
+                <a href="#policy" style="color: var(--theme-secondary-text); font-size: 0.85rem; text-decoration: none; margin: 0 10px; font-weight: 500;">Privacy Policy</a>
+                <span style="color: var(--theme-secondary-text);">|</span>
+                <a href="#policy" style="color: var(--theme-secondary-text); font-size: 0.85rem; text-decoration: none; margin: 0 10px; font-weight: 500;">Return Policy</a>
+            </div>
             <p>&copy; 2026 DuckShop. Fast & Secure Shopping Experience.</p>  
         </div>  
     </footer>  
@@ -2278,7 +2338,7 @@
           
         const ADMIN_PHONE = "ADMIN_PHONE_HERE";  
           
-        let allProducts = [];  
+        let allProducts =[];  
         let allCategories =[];  
         let allOrders = {};   
         let currentUser = null;   
@@ -2590,6 +2650,9 @@
             else if(b==='#reselling-share'&&p.has('link')) renderResellingSharePage(p.get('link'));
             else if(b==='#reselling-link-details'&&p.has('id')) renderResellingLinkDetailsPage(p.get('id'));
 
+            // POLICY PAGE
+            else if(b==='#policy') {/* handled by active class toggle */} 
+
             if(b==='#login' || b==='#register'){
                 if(!verifiedAuthPhone){
                     window.location.hash = '#auth';
@@ -2657,6 +2720,9 @@
             // NEW: Categories Page
             else if(b==='#categories'){t=document.getElementById('categories-page');} 
 
+            // POLICY PAGE
+            else if(b==='#policy'){t=document.getElementById('policy-page');}
+
             // RESELLING IDS
             else if(b==='#reselling-join'){t=document.getElementById('reselling-join-page');}
             else if(b==='#reselling-dashboard'){t=document.getElementById('reselling-dashboard-page');}
@@ -2671,19 +2737,37 @@
             
 
             updateCurrentView();   
-            document.querySelectorAll('.nav-link, .side-menu-link').forEach(l=>{ const lh=l.getAttribute('href'); l.classList.toggle('active',(lh===b)||(b==='#category'&&lh==='#categories')||(b==='#order'&&lh==='#orders')||(b==='#reselling-dashboard'&&lh.startsWith('#resell'))); });   
+            document.querySelectorAll('.nav-link, .side-menu-link').forEach(l=>{ const lh=l.getAttribute('href'); l.classList.toggle('active',(lh===b)||(b==='#category'&&lh==='#categories')||(b==='#order'&&lh==='#orders')||(b==='#reselling-dashboard'&&lh.startsWith('#resell'))||(lh==='#policy'&&b==='#policy')); });   
             const protectedRoutes =['#orders', '#profile', '#checkout', '#payment', '#order', '#order-confirmation', '#reselling-dashboard', '#reselling-create', '#reselling-link-details'];  
             if(protectedRoutes.some(route => b.startsWith(route)) && !currentUser){ window.location.hash='#auth'; showToast('Please log in.','error'); }   
             document.querySelector('.main-nav.active')?.classList.remove('active');   
             window.scrollTo(0,0);   
         };  
           
-        const createProductCardHtml = (product, extraClass = '') => {   
+       const createProductCardHtml = (product, extraClass = '') => {   
             const isFavourited=userFavourites.includes(product.id);   
             let priceHtml,displayPrice,displayOriginalPrice,displayDiscountPercent,isOutOfStock;   
             const hasValidVariants=product.hasVariants&&Array.isArray(product.variants)&&product.variants.length>0;   
-            if(hasValidVariants){const fv=product.variants[0]; displayPrice=fv.price; displayOriginalPrice=fv.originalPrice; if(displayOriginalPrice&&displayOriginalPrice>displayPrice){displayDiscountPercent=Math.round(((displayOriginalPrice-displayPrice)/displayOriginalPrice)*100);} isOutOfStock=product.variants.every(v=>v.stock<=0); }else{displayPrice=product.price; displayOriginalPrice=product.originalPrice; displayDiscountPercent=product.discountPercent; isOutOfStock=product.stock<=0;}   
-            if(displayOriginalPrice&&displayOriginalPrice>displayPrice){priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span><span class="product-price-original">${formatCurrency(displayOriginalPrice)}</span>${displayDiscountPercent?`<span class="product-discount-badge">${displayDiscountPercent}% OFF</span>`:''}</div>`;}else{priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span></div>`;}   
+            
+            if(hasValidVariants){
+                const fv=product.variants[0]; 
+                displayPrice=fv.price; 
+                displayOriginalPrice=fv.originalPrice; 
+                isOutOfStock=product.variants.every(v=>v.stock<=0); 
+            } else {
+                displayPrice=product.price; 
+                displayOriginalPrice=product.originalPrice; 
+                isOutOfStock=product.stock<=0;
+            }   
+            
+            // FIXED: Automatically calculate discount percentage if original price is greater than selling price
+            if(displayOriginalPrice && displayOriginalPrice > displayPrice){
+                displayDiscountPercent = Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100);
+                priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span><span class="product-price-original">${formatCurrency(displayOriginalPrice)}</span></div><div class="product-discount-badge">${displayDiscountPercent}% OFF</div>`;
+            } else {
+                priceHtml=`<div class="product-price-container"><span class="product-price">${formatCurrency(displayPrice)}</span></div>`;
+            }   
+            
             const cardImageUrl=(Array.isArray(product.imageUrls)&&product.imageUrls.length>0)?product.imageUrls[0]:product.imageUrl;   
             
             // --- AUTOMATIC VEG/NON-VEG TAG LOGIC (DB DRIVEN) ---
@@ -2698,15 +2782,14 @@
                 }
             }
 
-            return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3><p class="product-category">${product.categoryName||'Uncategorized'}</p>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;   
-        };  
-          
+return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;
+        };
         const renderProductDetailPage = (productId, r_link = null) => {  
             const container = document.getElementById('product-detail-page');  
             const product = allProducts.find(p => p.id === productId);  
             if (!product) { container.innerHTML = '<p class="empty-list-message">Product not found.</p>'; return; }  
             const isFavourited = userFavourites.includes(product.id);  
-            const imageUrls = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl];  
+            const imageUrls = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls :[product.imageUrl];  
             if (productSwiperInstance !== null) { productSwiperInstance.destroy(true, true); productSwiperInstance = null; }  
             const variants = product.variants ||[]; const hasVariants = product.hasVariants && variants.length > 0;  
             
@@ -2921,8 +3004,8 @@
         // MAJOR UPDATE: SMART CATEGORY PAGE (Hybrid Grid/Slider)
         // =========================================================
         const renderCategoryProductsPage = (id, name) => { 
-            // 1. Update Header Title
-            document.getElementById('category-products-title').textContent = decodeURIComponent(name || 'Category');
+            // We do not show the title text inside the category page, only the search box (like the video)
+            // So we leave this empty intentionally, as it's not present in the new HTML layout.
             
             const container = document.getElementById('category-content-container');
             const subSearchInput = document.getElementById('sub-category-search');
@@ -2942,7 +3025,7 @@
 
             // 4. INTELLIGENT LAYOUT DETECTION
             // Check if products have distinct sub-categories defined
-            const subCategories = [...new Set(categoryProducts.map(p => p.subCategory || ''))].filter(s => s.trim() !== '');
+            const subCategories =[...new Set(categoryProducts.map(p => p.subCategory || ''))].filter(s => s.trim() !== '');
             const shouldUseSliderLayout = subCategories.length > 0;
 
             if (shouldUseSliderLayout) {
@@ -2953,7 +3036,7 @@
                 categoryProducts.forEach(prod => {
                     const subCat = prod.subCategory || 'Other Products'; 
                     if (!groupedProducts[subCat]) {
-                        groupedProducts[subCat] = [];
+                        groupedProducts[subCat] =[];
                     }
                     groupedProducts[subCat].push(prod);
                 });
@@ -2963,7 +3046,7 @@
                     let swiperIndices =[];
                     let groupIndex = 0;
 
-                    for (const [subCatName, products] of Object.entries(groupedProducts)) {
+                    for (const[subCatName, products] of Object.entries(groupedProducts)) {
                         const filteredProducts = products.filter(p => p.name.toLowerCase().includes(filterText));
                         
                         if (filteredProducts.length > 0) {
@@ -2971,7 +3054,7 @@
                             <div class="sub-category-group">
                                 <div class="sub-category-title">
                                     <span>${subCatName}</span>
-                                    <span style="font-size:12px; color:#888;">${filteredProducts.length} items</span>
+                                    <span>${filteredProducts.length} items</span>
                                 </div>
                                 <div class="swiper sub-cat-swiper" id="sub-cat-swiper-${groupIndex}">
                                     <div class="swiper-wrapper">
@@ -3378,8 +3461,8 @@
                         </div>`; 
             }).join('');  
             
-            const isConfirmed = ['Pending', 'Shipped', 'Delivered'].includes(order.status);
-            const isShipped = ['Shipped', 'Delivered'].includes(order.status);
+            const isConfirmed =['Pending', 'Shipped', 'Delivered'].includes(order.status);
+            const isShipped =['Shipped', 'Delivered'].includes(order.status);
             const isDelivered = order.status === 'Delivered';  
             
             const statusTrackerHtml = order.status === 'Cancelled' ? 
