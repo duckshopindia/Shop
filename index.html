@@ -1631,6 +1631,9 @@
                     <div id="search-suggestions-box"></div>
                 </div>
             </div>  
+            <!-- NEW: Yaha par search kiya gaya text show hoga -->
+            <div id="search-query-display" style="padding: 1rem 1rem 0; font-size: 1.1rem; font-weight: 500; color: #212121; display: none;"></div>
+
             <div id="search-results-grid" class="product-grid">  
                  <p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search for products.</p>  
             </div>  
@@ -2782,7 +2785,7 @@
                 }
             }
 
-return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;
+            return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3><p class="product-category">${product.categoryName||'Uncategorized'}</p>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;   
         };
         const renderProductDetailPage = (productId, r_link = null) => {  
             const container = document.getElementById('product-detail-page');  
@@ -2958,7 +2961,13 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             }).join('');
         }
 
-        const renderSearchPage = () => { actualSearchInput.value=''; actualSearchInput.focus(); searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; searchSuggestionsBox.style.display = 'none'; };  
+        const renderSearchPage = () => { 
+            actualSearchInput.value=''; actualSearchInput.focus(); 
+            searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; 
+            searchSuggestionsBox.style.display = 'none'; 
+            document.getElementById('search-query-display').style.display = 'none';
+        };  
+
         const handleSearchInput = () => {   
             const s = actualSearchInput.value.toLowerCase().trim(); 
             
@@ -2977,26 +2986,48 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     `).join('');
                     searchSuggestionsBox.style.display = 'block';
                 } else {
-                    searchSuggestionsBox.style.display = 'none';
+                    searchSuggestionsBox.innerHTML = `<div class="suggestion-item" style="color:#878787;">No suggestions found</div>`;
+                    searchSuggestionsBox.style.display = 'block';
                 }
             } else {
                 searchSuggestionsBox.style.display = 'none';
             }
-
-            // Normal Search
-            if(s.length < 1){ searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; return; }   
-            const f = allProducts.filter(p => p.name.toLowerCase().includes(s));  
-            searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${s}".</p>` : f.map(p => createProductCardHtml(p)).join('');   
         };  
         
+        // NAYA FUNCTION: Actual search perform karne ke liye
+        const performSearch = (term) => {
+            searchSuggestionsBox.style.display = 'none';
+            actualSearchInput.value = term;
+            actualSearchInput.blur(); // Mobile keyboard chupane ke liye
+
+            // Upar search text show karna
+            const queryDisplay = document.getElementById('search-query-display');
+            queryDisplay.style.display = 'block';
+            queryDisplay.innerHTML = `Showing results for "<strong>${term}</strong>"`;
+
+            const s = term.toLowerCase().trim();
+            if(s.length < 1){ 
+                searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Please enter a search term.</p>'; 
+                return; 
+            }   
+
+            const f = allProducts.filter(p => p.name.toLowerCase().includes(s) || (p.categoryName && p.categoryName.toLowerCase().includes(s)));  
+            searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${term}".</p>` : f.map(p => createProductCardHtml(p)).join('');   
+        };
+
         // Handle Suggestion Click
         searchSuggestionsBox.addEventListener('click', (e) => {
             const item = e.target.closest('.suggestion-item');
-            if(item) {
-                const term = item.dataset.searchTerm;
-                actualSearchInput.value = term;
-                searchSuggestionsBox.style.display = 'none';
-                handleSearchInput(); // Trigger search immediately
+            if(item && item.dataset.searchTerm) {
+                performSearch(item.dataset.searchTerm); // Click karne par search karega
+            }
+        });
+
+        // NAYA: Enter key press karne par search hoga
+        actualSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch(actualSearchInput.value);
             }
         });
 
@@ -3189,7 +3220,20 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                  userCart[cid] = cdata; 
             }   
             
-            if(currentUser)await set(ref(db,`users/${currentUser.phone}/cart/${cid}`),userCart[cid]); else{saveCartToStorage(userCart);renderCart();updateBadges();} showToast(`${p.name} added to cart!`);   
+            if(currentUser) {
+                await set(ref(db,`users/${currentUser.phone}/cart/${cid}`),userCart[cid]); 
+            } else {
+                saveCartToStorage(userCart);
+                renderCart();
+                updateBadges();
+            } 
+            showToast(`${p.name} added to cart!`);   
+
+            // NEW CODE: Product page ko refresh karega taaki "Go to Cart" button show ho
+            if (window.location.hash.startsWith('#product')) {
+                const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+                renderProductDetailPage(urlParams.get('id'), urlParams.get('r_link'));
+            }
         };  
         const updateCartQuantity = async (id,q)=>{if(q<=0)delete userCart[id];else userCart[id].quantity=q; if(currentUser)await set(ref(db,`users/${currentUser.phone}/cart`),userCart); else{saveCartToStorage(userCart);renderCart();updateBadges();}};  
         
@@ -4377,7 +4421,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             } catch(e) { console.error(e); }
         };
 
-        document.addEventListener('DOMContentLoaded', ()=>{ startAppListeners(); checkSessionOnLoad(); const sideMenu = document.getElementById('side-menu'), menuOverlay = document.getElementById('menu-overlay'), homeMenuIcon = document.getElementById('home-menu-icon'); const closeMenu = () => { sideMenu.classList.remove('open'); menuOverlay.classList.remove('active'); }; if (homeMenuIcon) homeMenuIcon.addEventListener('click', (e) => { e.stopPropagation(); sideMenu.classList.add('open'); menuOverlay.classList.add('active'); }); if (menuOverlay) menuOverlay.addEventListener('click', closeMenu); if (sideMenu) sideMenu.addEventListener('click', (e) => { if (e.target.closest('a')) closeMenu(); }); });  
+        document.addEventListener('DOMContentLoaded', ()=>{ startAppListeners(); checkSessionOnLoad(); const sideMenu = document.getElementById('side-menu'), menuOverlay = document.getElementById('menu-overlay'), homeMenuIcon = document.getElementById('home-menu-icon'); const closeMenu =() => { sideMenu.classList.remove('open'); menuOverlay.classList.remove('active'); }; if (homeMenuIcon) homeMenuIcon.addEventListener('click', (e) => { e.stopPropagation(); sideMenu.classList.add('open'); menuOverlay.classList.add('active'); }); if (menuOverlay) menuOverlay.addEventListener('click', closeMenu); if (sideMenu) sideMenu.addEventListener('click', (e) => { if (e.target.closest('a')) closeMenu(); }); });  
 
         window.addEventListener('hashchange', handleRouting);  
         document.querySelectorAll('.close-modal-btn').forEach(b=>b.addEventListener('click', ()=>document.querySelector(b.dataset.target).classList.remove('open')));  
@@ -4388,11 +4432,13 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         
         homeSearchTrigger.addEventListener('click', ()=>{window.location.hash='#search';});  
         actualSearchInput.addEventListener('input', handleSearchInput);  
+        
         document.addEventListener('click', (e) => {
             if (e.target.closest('#enable-notifications-btn')) { e.preventDefault(); requestPermissionAndGetToken(); }
             if (e.target.id === 'detect-location-btn' || e.target.closest('#detect-location-btn')) { e.preventDefault(); detectCurrentLocation(); }
             if (e.target.closest('.toast.notification')) { window.location.hash = '#orders'; }
         });
+        
         document.addEventListener('click', (e) => {  
             const actionTarget = e.target.closest('[data-action]');  
             if (actionTarget) {  
@@ -4484,6 +4530,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         });  
 
         document.getElementById('old-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const oldPassInput = document.getElementById('old-password'); const oldPass = oldPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); let targetUserPassword = null; if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (passwordRecoveryUserPhone) { const userSnap = await get(ref(db, `users/${targetUserPhone}`)); if (userSnap.exists()) { targetUserPassword = userSnap.val().password; } } else if (currentUser) { targetUserPassword = currentUser.password; } if (oldPass === targetUserPassword) { window.location.hash = '#new-password'; oldPassInput.value = ''; } else { showToast('Incorrect old password.', 'error'); } });  
+        
         document.getElementById('new-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const newPassInput = document.getElementById('new-password'); const confirmPassInput = document.getElementById('confirm-password'); const newPass = newPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (newPass.length < 1) { showToast('Password cannot be empty.', 'error'); return; } if (newPass !== confirmPassInput.value) { showToast('Passwords do not match.', 'error'); return; } try { await set(ref(db, `users/${targetUserPhone}/password`), newPass); if (currentUser && currentUser.phone === targetUserPhone) { currentUser.password = newPass; } showToast('Password changed successfully!', 'success'); newPassInput.value = ''; confirmPassInput.value = ''; if (passwordRecoveryUserPhone) { passwordRecoveryUserPhone = null; window.location.hash = '#auth'; } else { window.location.hash = '#profile'; } } catch (err) { showToast('Failed to change password.', 'error'); } });  
     </script>
 
