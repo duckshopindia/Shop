@@ -1631,9 +1631,6 @@
                     <div id="search-suggestions-box"></div>
                 </div>
             </div>  
-            <!-- NEW: Yaha par search kiya gaya text show hoga -->
-            <div id="search-query-display" style="padding: 1rem 1rem 0; font-size: 1.1rem; font-weight: 500; color: #212121; display: none;"></div>
-
             <div id="search-results-grid" class="product-grid">  
                  <p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search for products.</p>  
             </div>  
@@ -2631,7 +2628,7 @@
         };  
 
         const updateCurrentView = () => {   
-            const h=window.location.hash||'#home'; const [b,q]=h.split('?'); const p=new URLSearchParams(q);   
+            const h=window.location.hash||'#home'; const[b,q]=h.split('?'); const p=new URLSearchParams(q);   
             if(b==='#home')renderHomePage();   
             else if(b==='#search')renderSearchPage();   
             else if(b==='#favourites')renderFavourites();   
@@ -2785,7 +2782,7 @@
                 }
             }
 
-            return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3><p class="product-category">${product.categoryName||'Uncategorized'}</p>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;   
+return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}" data-id="${product.id}">${isOutOfStock?'<div class="product-stock-overlay">Out of Stock</div>':''}<img src="${cardImageUrl}" alt="${product.name}" class="product-image" loading="lazy" onload="this.classList.add('loaded')"><div class="product-info"><h3 class="product-name">${tagHtml}${product.name}</h3>${priceHtml}<div class="product-actions"><button class="icon-btn share-btn" data-action="share-product" data-id="${product.id}" aria-label="Share"><i class="fas fa-share-alt"></i></button><button class="icon-btn ${isFavourited?'active':''}" data-action="toggle-favourite" data-id="${product.id}" aria-label="Add to favourites"><i class="fas fa-heart"></i></button></div></div></div>`;
         };
         const renderProductDetailPage = (productId, r_link = null) => {  
             const container = document.getElementById('product-detail-page');  
@@ -2961,15 +2958,23 @@
             }).join('');
         }
 
-        const renderSearchPage = () => { 
-            actualSearchInput.value=''; actualSearchInput.focus(); 
-            searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; 
-            searchSuggestionsBox.style.display = 'none'; 
-            document.getElementById('search-query-display').style.display = 'none';
-        };  
+        const renderSearchPage = () => { actualSearchInput.value=''; actualSearchInput.focus(); searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; searchSuggestionsBox.style.display = 'none'; };  
+        
+        const performSearch = (term) => {
+            const s = term.toLowerCase().trim();
+            searchSuggestionsBox.style.display = 'none';
+            if(s.length < 1) {
+                searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>'; 
+                return; 
+            }
+            const f = allProducts.filter(p => p.name.toLowerCase().includes(s) || (p.categoryName && p.categoryName.toLowerCase().includes(s)));  
+            searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${term}".</p>` : f.map(p => createProductCardHtml(p)).join('');
+        };
 
         const handleSearchInput = () => {   
             const s = actualSearchInput.value.toLowerCase().trim(); 
+            // FIXED: Clear results grid to hide products while typing
+            searchResultsGrid.innerHTML = '';
             
             // REAL-TIME SUGGESTIONS LOGIC
             if(s.length > 0) {
@@ -2986,44 +2991,27 @@
                     `).join('');
                     searchSuggestionsBox.style.display = 'block';
                 } else {
-                    searchSuggestionsBox.innerHTML = `<div class="suggestion-item" style="color:#878787;">No suggestions found</div>`;
-                    searchSuggestionsBox.style.display = 'block';
+                    searchSuggestionsBox.style.display = 'none';
+                    searchResultsGrid.innerHTML = `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${s}".</p>`;
                 }
             } else {
                 searchSuggestionsBox.style.display = 'none';
+                searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Start typing to search.</p>';
             }
         };  
         
-        // NAYA FUNCTION: Actual search perform karne ke liye
-        const performSearch = (term) => {
-            searchSuggestionsBox.style.display = 'none';
-            actualSearchInput.value = term;
-            actualSearchInput.blur(); // Mobile keyboard chupane ke liye
-
-            // Upar search text show karna
-            const queryDisplay = document.getElementById('search-query-display');
-            queryDisplay.style.display = 'block';
-            queryDisplay.innerHTML = `Showing results for "<strong>${term}</strong>"`;
-
-            const s = term.toLowerCase().trim();
-            if(s.length < 1){ 
-                searchResultsGrid.innerHTML='<p class="empty-list-message" style="grid-column: 1 / -1;">Please enter a search term.</p>'; 
-                return; 
-            }   
-
-            const f = allProducts.filter(p => p.name.toLowerCase().includes(s) || (p.categoryName && p.categoryName.toLowerCase().includes(s)));  
-            searchResultsGrid.innerHTML = f.length === 0 ? `<p class="empty-list-message" style="grid-column: 1 / -1;">No products found for "${term}".</p>` : f.map(p => createProductCardHtml(p)).join('');   
-        };
-
         // Handle Suggestion Click
         searchSuggestionsBox.addEventListener('click', (e) => {
             const item = e.target.closest('.suggestion-item');
-            if(item && item.dataset.searchTerm) {
-                performSearch(item.dataset.searchTerm); // Click karne par search karega
+            if(item) {
+                const term = item.dataset.searchTerm;
+                actualSearchInput.value = term;
+                searchSuggestionsBox.style.display = 'none';
+                performSearch(term); // Trigger actual search
             }
         });
 
-        // NAYA: Enter key press karne par search hoga
+        // FIXED: Handle Enter Key for search
         actualSearchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -3220,22 +3208,29 @@
                  userCart[cid] = cdata; 
             }   
             
-            if(currentUser) {
-                await set(ref(db,`users/${currentUser.phone}/cart/${cid}`),userCart[cid]); 
+            if(currentUser){
+                 await set(ref(db,`users/${currentUser.phone}/cart/${cid}`),userCart[cid]); 
+            } else {
+                 saveCartToStorage(userCart);
+                 renderCart();
+                 updateBadges();
+                 updateCurrentView(); // <--- ADDED FIX FOR GUEST ADD TO CART
+            }
+            showToast(`${p.name} added to cart!`);   
+        };  
+        const updateCartQuantity = async (id,q)=>{
+            if(q<=0)delete userCart[id];
+            else userCart[id].quantity=q; 
+            
+            if(currentUser){
+                await set(ref(db,`users/${currentUser.phone}/cart`),userCart); 
             } else {
                 saveCartToStorage(userCart);
                 renderCart();
                 updateBadges();
-            } 
-            showToast(`${p.name} added to cart!`);   
-
-            // NEW CODE: Product page ko refresh karega taaki "Go to Cart" button show ho
-            if (window.location.hash.startsWith('#product')) {
-                const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-                renderProductDetailPage(urlParams.get('id'), urlParams.get('r_link'));
+                updateCurrentView(); // <--- ADDED FIX FOR GUEST CART UPDATE
             }
         };  
-        const updateCartQuantity = async (id,q)=>{if(q<=0)delete userCart[id];else userCart[id].quantity=q; if(currentUser)await set(ref(db,`users/${currentUser.phone}/cart`),userCart); else{saveCartToStorage(userCart);renderCart();updateBadges();}};  
         
         // --- FLIPKART STYLE RENDER CART ---
         const renderCart = () => {   
@@ -3905,7 +3900,7 @@
                 `; 
                 showToast(`Location captured! Delivery: ${formatCurrency(calculatedDeliveryFee)}`, 'success'); 
                 
-            } catch (error) { let errorMsg = isWebView ? (error.code === 1 ? "App Location Permission Denied. Please allow in Android Settings." : "GPS Signal weak or OFF. Please turn on GPS in Quick Settings.") : 'Please allow location access in your browser.'; if(messageDiv) { messageDiv.classList.remove('d-none'); messageDiv.innerHTML = `<p style="color:red; background: #fff; padding: 10px; border-radius: 4px;">${errorMsg}</p>`; } } finally { if (button) { button.disabled = false; button.innerHTML = '<i class="fas fa-location-crosshairs"></i> Detect My Location'; } }
+            } catch (error) { let errorMsg = isWebView ? (error.code === 1 ? "App Location Permission Denied. Please allow in Android Settings." :"GPS Signal weak or OFF. Please turn on GPS in Quick Settings.") : 'Please allow location access in your browser.'; if(messageDiv) { messageDiv.classList.remove('d-none'); messageDiv.innerHTML = `<p style="color:red; background: #fff; padding: 10px; border-radius: 4px;">${errorMsg}</p>`; } } finally { if (button) { button.disabled = false; button.innerHTML = '<i class="fas fa-location-crosshairs"></i> Detect My Location'; } }
         };
         const reverseGeocode = async (lat, lng) => { try { const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`); if (!response.ok) throw new Error('Geocoding failed'); return await response.json(); } catch (error) { return { display_name: `Near ${lat.toFixed(4)}, ${lng.toFixed(4)}`, address: { postcode: '799201', city: 'Khowai', state: 'Tripura' } }; } };
         
@@ -4421,7 +4416,7 @@
             } catch(e) { console.error(e); }
         };
 
-        document.addEventListener('DOMContentLoaded', ()=>{ startAppListeners(); checkSessionOnLoad(); const sideMenu = document.getElementById('side-menu'), menuOverlay = document.getElementById('menu-overlay'), homeMenuIcon = document.getElementById('home-menu-icon'); const closeMenu =() => { sideMenu.classList.remove('open'); menuOverlay.classList.remove('active'); }; if (homeMenuIcon) homeMenuIcon.addEventListener('click', (e) => { e.stopPropagation(); sideMenu.classList.add('open'); menuOverlay.classList.add('active'); }); if (menuOverlay) menuOverlay.addEventListener('click', closeMenu); if (sideMenu) sideMenu.addEventListener('click', (e) => { if (e.target.closest('a')) closeMenu(); }); });  
+        document.addEventListener('DOMContentLoaded', ()=>{ startAppListeners(); checkSessionOnLoad(); const sideMenu = document.getElementById('side-menu'), menuOverlay = document.getElementById('menu-overlay'), homeMenuIcon = document.getElementById('home-menu-icon'); const closeMenu = () => { sideMenu.classList.remove('open'); menuOverlay.classList.remove('active'); }; if (homeMenuIcon) homeMenuIcon.addEventListener('click', (e) => { e.stopPropagation(); sideMenu.classList.add('open'); menuOverlay.classList.add('active'); }); if (menuOverlay) menuOverlay.addEventListener('click', closeMenu); if (sideMenu) sideMenu.addEventListener('click', (e) => { if (e.target.closest('a')) closeMenu(); }); });  
 
         window.addEventListener('hashchange', handleRouting);  
         document.querySelectorAll('.close-modal-btn').forEach(b=>b.addEventListener('click', ()=>document.querySelector(b.dataset.target).classList.remove('open')));  
@@ -4432,13 +4427,11 @@
         
         homeSearchTrigger.addEventListener('click', ()=>{window.location.hash='#search';});  
         actualSearchInput.addEventListener('input', handleSearchInput);  
-        
         document.addEventListener('click', (e) => {
             if (e.target.closest('#enable-notifications-btn')) { e.preventDefault(); requestPermissionAndGetToken(); }
             if (e.target.id === 'detect-location-btn' || e.target.closest('#detect-location-btn')) { e.preventDefault(); detectCurrentLocation(); }
             if (e.target.closest('.toast.notification')) { window.location.hash = '#orders'; }
         });
-        
         document.addEventListener('click', (e) => {  
             const actionTarget = e.target.closest('[data-action]');  
             if (actionTarget) {  
@@ -4530,7 +4523,6 @@
         });  
 
         document.getElementById('old-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const oldPassInput = document.getElementById('old-password'); const oldPass = oldPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); let targetUserPassword = null; if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (passwordRecoveryUserPhone) { const userSnap = await get(ref(db, `users/${targetUserPhone}`)); if (userSnap.exists()) { targetUserPassword = userSnap.val().password; } } else if (currentUser) { targetUserPassword = currentUser.password; } if (oldPass === targetUserPassword) { window.location.hash = '#new-password'; oldPassInput.value = ''; } else { showToast('Incorrect old password.', 'error'); } });  
-        
         document.getElementById('new-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const newPassInput = document.getElementById('new-password'); const confirmPassInput = document.getElementById('confirm-password'); const newPass = newPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (newPass.length < 1) { showToast('Password cannot be empty.', 'error'); return; } if (newPass !== confirmPassInput.value) { showToast('Passwords do not match.', 'error'); return; } try { await set(ref(db, `users/${targetUserPhone}/password`), newPass); if (currentUser && currentUser.phone === targetUserPhone) { currentUser.password = newPass; } showToast('Password changed successfully!', 'success'); newPassInput.value = ''; confirmPassInput.value = ''; if (passwordRecoveryUserPhone) { passwordRecoveryUserPhone = null; window.location.hash = '#auth'; } else { window.location.hash = '#profile'; } } catch (err) { showToast('Failed to change password.', 'error'); } });  
     </script>
 
