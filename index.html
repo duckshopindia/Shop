@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />  
+    
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>  
         /* =================================================================  
@@ -3561,8 +3564,123 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         <p>${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}</p>
                         <p>Phone: ${order.shippingDetails.phone}</p>
                     </div>
+
+                    <!-- INVOICE SECTION -->
+                    <div class="order-detail-card text-center" style="margin-top: 1rem;">
+                        <h3 style="margin-bottom: 1rem;">Order Invoice</h3>
+                        ${isDelivered ? 
+                            `<button class="btn btn-primary" data-action="download-invoice" data-id="${order.id}" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                                <i class="fas fa-file-pdf" style="font-size: 1.2rem;"></i> Download Invoice
+                            </button>` : 
+                            `<button class="btn btn-outline" disabled style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: not-allowed;">
+                                <i class="fas fa-lock" style="font-size: 1.2rem;"></i> Invoice Locked (Available after delivery)
+                            </button>`
+                        }
+                    </div>
                 </div>`;  
         };  
+
+        // NEW PDF INVOICE DOWNLOAD FUNCTION
+        const downloadInvoice = (orderId) => {
+            const order = allOrders[orderId];
+            if (!order) return;
+            
+            showToast("Preparing invoice download...");
+
+            const invoiceDiv = document.createElement('div');
+            invoiceDiv.style.position = 'absolute';
+            invoiceDiv.style.left = '-9999px';
+            invoiceDiv.style.top = '0';
+            document.body.appendChild(invoiceDiv);
+
+            const itemsHtml = Object.values(order.items).map(item => `
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ccc;">${item.name} ${item.selectedVariantName ? `(${item.selectedVariantName})` : ''}</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${item.quantity}</td>
+                    <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatCurrency(item.price)}</td>
+                    <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatCurrency(item.price * item.quantity)}</td>
+                </tr>
+            `).join('');
+
+            invoiceDiv.innerHTML = `
+                <div style="padding: 30px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff; width: 800px;">
+                    <div style="text-align: right; border-bottom: 2px solid #388e3c; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h1 style="margin: 0; font-size: 32px; font-weight: 800;"><span style="color: #000;">Duck</span><span style="color: #388e3c;">Shop</span></h1>
+                        <p style="margin: 5px 0 0; font-size: 14px; color: #666; font-weight: 600;">Tax Invoice / Bill of Supply</p>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="width: 48%;">
+                            <h4 style="margin: 0 0 8px; font-size: 14px; color: #555; text-transform: uppercase;">Sold By:</h4>
+                            <p style="margin: 0 0 4px; font-size: 13px; font-weight: bold;">DuckShop E-Commerce</p>
+                            <p style="margin: 0 0 4px; font-size: 13px;">Main Branch</p>
+                            <p style="margin: 0; font-size: 13px;">Khowai, Tripura, 799201</p>
+                        </div>
+                        <div style="width: 48%; text-align: right;">
+                            <h4 style="margin: 0 0 8px; font-size: 14px; color: #555; text-transform: uppercase;">Billing/Shipping Address:</h4>
+                            <p style="margin: 0 0 4px; font-size: 13px; font-weight: bold;">${order.shippingDetails.name}</p>
+                            <p style="margin: 0 0 4px; font-size: 13px;">${order.shippingDetails.fullAddress}</p>
+                            <p style="margin: 0 0 4px; font-size: 13px;">${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}</p>
+                            <p style="margin: 0; font-size: 13px;">Phone: ${order.shippingDetails.phone}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f9f9f9; padding: 12px; border-radius: 4px; border: 1px solid #eee;">
+                        <div style="font-size: 13px;"><strong>Order ID:</strong> ${generateNumericOrderId(order.id)}</div>
+                        <div style="font-size: 13px;"><strong>Order Date:</strong> ${new Date(order.date).toLocaleDateString()}</div>
+                        <div style="font-size: 13px;"><strong>Invoice Date:</strong> ${new Date().toLocaleDateString()}</div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #ccc; font-weight: 600;">Product Description</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #ccc; font-weight: 600;">Qty</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #ccc; font-weight: 600;">Unit Price</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #ccc; font-weight: 600;">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div style="display: flex; justify-content: flex-end;">
+                        <table style="width: 40%; border-collapse: collapse; font-size: 13px;">
+                            <tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Subtotal:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${formatCurrency(order.subtotal)}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Delivery Charge:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${formatCurrency(order.deliveryFee)}</td></tr>
+                            ${order.discount > 0 ? `<tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Discount:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold; color: #388e3c;">-${formatCurrency(order.discount)}</td></tr>` : ''}
+                            ${order.walletDeduction > 0 ? `<tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Wallet Paid:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold; color: #388e3c;">-${formatCurrency(order.walletDeduction)}</td></tr>` : ''}
+                            <tr style="background: #f0f0f0;"><td style="padding: 10px; font-weight: bold; border: 1px solid #ccc; font-size: 15px;">Grand Total:</td><td style="padding: 10px; font-weight: bold; text-align: right; border: 1px solid #ccc; font-size: 15px;">${formatCurrency(order.total)}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #888; border-top: 1px dashed #ccc; padding-top: 15px;">
+                        <p style="margin: 0 0 5px;">Thank you for shopping with DuckShop!</p>
+                        <p style="margin: 0;">This is a computer-generated invoice and does not require a physical signature.</p>
+                    </div>
+                </div>
+            `;
+
+            const fileName = `DuckShop Order ID ${generateNumericOrderId(order.id)}.pdf`;
+
+            const opt = {
+                margin:       0,
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(invoiceDiv.firstElementChild).save().then(() => {
+                document.body.removeChild(invoiceDiv);
+                showToast("Invoice downloaded successfully!", "success");
+            }).catch(err => {
+                console.error("PDF generation error: ", err);
+                document.body.removeChild(invoiceDiv);
+                showToast("Failed to generate invoice", "error");
+            });
+        };
           
         const updateBadges = () => { const c=Object.values(userCart).reduce((s,i)=>s+i.quantity,0); if (bottomCartBadge) bottomCartBadge.textContent = c > 0 ? c : ''; if (favouritesBadge) favouritesBadge.textContent = userFavourites.length > 0 ? userFavourites.length : ''; };  
         const getCartFromStorage=()=>JSON.parse(localStorage.getItem('cart'))||{}; const saveCartToStorage=(c)=>localStorage.setItem('cart',JSON.stringify(c)); const getFavouritesFromStorage=()=>JSON.parse(localStorage.getItem('favourites'))||[]; const saveFavouritesToStorage=(w)=>localStorage.setItem('favourites',JSON.stringify(w));  
@@ -4018,7 +4136,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
 
                 updates[`orders/${orderData.id}`] = orderData;
                 
-                for (const cid in userCart) { const i = userCart[cid], p = allProducts.find(pr => pr.id === i.id); if (i.selectedVariantName) { const vIndex = p.variants.findIndex(v => v.name === i.selectedVariantName); if (vIndex !== -1) updates[`/products/${i.id}/variants/${vIndex}/stock`] = p.variants[vIndex].stock - i.quantity; } else { updates[`/products/${i.id}/stock`] = p.stock - i.quantity; } } 
+                for (const cid in userCart) { const i = userCart[cid], p = allProducts.find(pr =>pr.id === i.id); if (i.selectedVariantName) { const vIndex = p.variants.findIndex(v => v.name === i.selectedVariantName); if (vIndex !== -1) updates[`/products/${i.id}/variants/${vIndex}/stock`] = p.variants[vIndex].stock - i.quantity; } else { updates[`/products/${i.id}/stock`] = p.stock - i.quantity; } } 
                 
                 await update(ref(db), updates); 
                 
@@ -4498,6 +4616,8 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                          }
                          break;
                     }
+                    // NEW INVOICE DOWNLOAD HANDLER
+                    case 'download-invoice': downloadInvoice(id); break;
                 }  
             } else if (e.target.id === 'final-confirm-order-btn') { placeOrder();  
             } else if (e.target.id === 'checkout-btn') { 
