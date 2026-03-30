@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />  
 
-    <!-- Added html2pdf for Fast Invoice Download inside Browser/APK -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Added html2canvas for Image Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>  
         /* =================================================================  
@@ -60,12 +60,11 @@
         body { font-family: 'Roboto', 'Poppins', sans-serif; background-color: var(--theme-light-gray); color: var(--theme-text); line-height: 1.4; font-size: 14px; padding-bottom: 0; overflow-x: hidden; }  
         .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }  
 
-        /* INSTANT IMAGE LOADING (Removed opacity transition for speed) */
+        /* INSTANT IMAGE LOADING */
         img {  
             max-width: 100%;  
             height: auto;  
             display: block;  
-            /* Removed opacity: 0 for instant visibility */
         }  
 
         /* FORCE IMAGE VISIBILITY FOR DYNAMIC CONTENT */
@@ -2696,7 +2695,7 @@
                  t=document.getElementById('product-detail-page');
                  t.classList.add('active');
                  // Show Skeleton inside t
-                 t.innerHTML = `<div class="container" style="padding-top:2rem; max-width:900px; margin:0 auto;">
+                 t.innerHTML = `<div class="container" stylepadding-top:2rem; max-width:900px; margin:0 auto;">
                     <div class="skeleton" style="height:350px; margin-bottom:1rem;"></div>
                     <div class="skeleton skeleton-text" style="width:70%; height:25px; margin-bottom:1rem;"></div>
                     <div class="skeleton skeleton-text" style="width:40%; height:20px;"></div>
@@ -3582,7 +3581,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         };  
         
         // ==============================================================
-        // INVOICE PREVIEW PAGE GENERATION LOGIC
+        // INVOICE PREVIEW PAGE GENERATION LOGIC (IMAGE UPLOAD VIA IMGBB)
         // ==============================================================
         const renderInvoicePreviewPage = (orderId) => {
             const container = document.getElementById('invoice-preview-page');
@@ -3643,7 +3642,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 <td style="text-align: right; padding: 12px 10px; font-size: 14px;"><strong>${formatCurrency(order.total)}</strong></td>
             </tr>`;
 
-            // Inject the full Preview Page (Mobile Responsive Layout)
+            // Inject the full Preview Page (Mobile Responsive Layout with perfectly scaled A4 Container)
             container.innerHTML = `
                 <div class="home-specific-header">
                     <h2 style="font-size: 1.1rem; font-weight: 500;"><i class="fas fa-file-invoice"></i> Invoice Preview</h2>
@@ -3651,16 +3650,16 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 <div class="container" style="padding: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <a href="#order?id=${order.id}" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
-                        <button id="execute-download-pdf-btn" class="btn btn-primary btn-sm" style="background-color: var(--theme-blue); border-color: var(--theme-blue); font-size: 1rem; padding: 8px 15px;">
-                            <i class="fas fa-download"></i> Download PDF
+                        <button id="execute-download-btn" class="btn btn-primary btn-sm" style="background-color: var(--theme-blue); border-color: var(--theme-blue); font-size: 1rem; padding: 8px 15px;">
+                            <i class="fas fa-download"></i> Download / View Image
                         </button>
                     </div>
                     
                     <!-- PERFECTLY MOBILE RESPONSIVE PREVIEW WRAPPER -->
                     <div id="invoice-preview-wrapper" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #e9ecef; padding: 15px; border-radius: 4px; display: block; text-align: center; white-space: nowrap;">
                         
-                        <!-- Fixed width to ensure stable PDF layout, inline-block stops mobile flex squishing -->
-                        <div id="invoice-content-to-print" style="display: inline-block; text-align: left; width: 800px; background: white; padding: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; white-space: normal; line-height: 1.5; letter-spacing: normal; word-spacing: normal;">
+                        <!-- Fixed A4 Ratio box (width 800px, min-height 1131px) ensures perfect image layout -->
+                        <div id="invoice-content-to-print" style="display: inline-block; text-align: left; width: 800px; min-height: 1131px; box-sizing: border-box; background: white; padding: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; white-space: normal; line-height: 1.5; letter-spacing: normal; word-spacing: normal; position: relative;">
                             
                             <!-- Header: Logo & Invoice Info -->
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #2874f0; padding-bottom: 15px;">
@@ -3725,8 +3724,8 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                                 </table>
                             </div>
 
-                            <!-- Footer -->
-                            <div style="text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; margin-top: 20px;">
+                            <!-- Footer (Fixed to bottom of the A4 layout) -->
+                            <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; border-top: 1px dashed #ccc; padding-top: 20px;">
                                 <p style="margin: 0 0 5px 0; font-size: 10px; color: #878787; font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;">This is a computer-generated invoice and does not require a physical signature.</p>
                                 <p style="margin: 0; font-size: 10px; color: #878787; font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;">Thank you for shopping with DuckShop! We hope to see you again soon.</p>
                             </div>
@@ -3736,62 +3735,81 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 </div>
             `;
 
-            // ADDED LOGIC FOR BROWSER REDIRECT AND AUTO DOWNLOAD
+            // BROWSER REDIRECT AND AUTO UPLOAD LOGIC
             const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
             const isAutoDownload = urlParams.get('auto_download') === 'true';
 
-            const triggerPdfDownload = () => {
+            const triggerImageUploadAndRedirect = () => {
                 const invoiceElement = document.getElementById('invoice-content-to-print');
+                const downloadBtn = document.getElementById('execute-download-btn');
                 
-                // Quality improvements for perfectly matching the preview
-                const opt = {
-                    margin: 0,
-                    filename: `DuckShop_Order_ID_${numericOrderId}.pdf`,
-                    image: { type: 'jpeg', quality: 1 },
-                    html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', letterRendering: true, windowWidth: 800 }, 
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
-
-                const downloadPdfBtn = document.getElementById('execute-download-pdf-btn');
-                if(downloadPdfBtn) {
-                    downloadPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
-                    downloadPdfBtn.disabled = true;
+                if(downloadBtn) {
+                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    downloadBtn.disabled = true;
                 }
 
-                html2pdf().set(opt).from(invoiceElement).outputPdf('blob').then((blob) => {
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = opt.filename;
-                    document.body.appendChild(a);
-                    a.click();
+                // Generates high quality PNG (scale 2) and exactly width 800
+                html2canvas(invoiceElement, { 
+                    scale: 2, 
+                    useCORS: true, 
+                    backgroundColor: '#ffffff',
+                    windowWidth: 800 
+                }).then((canvas) => {
+                    // Get base64 string without data type prefix
+                    const base64Image = canvas.toDataURL('image/png').split(',')[1];
                     
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(blobUrl);
-                    }, 100);
-
-                    if(downloadPdfBtn) {
-                        downloadPdfBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
-                        downloadPdfBtn.disabled = false;
-                    }
-                    showToast('Download started successfully!', 'success');
+                    const formData = new FormData();
+                    formData.append('image', base64Image);
+                    // Specific name format given
+                    formData.append('name', `DuckShop_Order_ID_${numericOrderId}`);
+                    
+                    fetch('https://api.imgbb.com/1/upload?key=0833dcd0900022eda284f45f4a9737d7', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if(result.success) {
+                            const imageUrl = result.data.url; // direct image url
+                            
+                            // Redirect user to the uploaded image URL
+                            window.location.href = imageUrl;
+                            
+                            if(downloadBtn) {
+                                downloadBtn.innerHTML = '<i class="fas fa-image"></i> View Image';
+                                downloadBtn.disabled = false;
+                            }
+                            showToast('Image generated successfully!', 'success');
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Imgbb Upload Error:', err);
+                        if(downloadBtn) {
+                            downloadBtn.innerHTML = '<i class="fas fa-image"></i> Download Image';
+                            downloadBtn.disabled = false;
+                        }
+                        showToast('Failed to upload image', 'error');
+                    });
                 }).catch(err => {
-                    console.error('PDF Generation Error:', err);
-                    if(downloadPdfBtn) {
-                        downloadPdfBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
-                        downloadPdfBtn.disabled = false;
+                    console.error('Canvas Generation Error:', err);
+                    if(downloadBtn) {
+                        downloadBtn.innerHTML = '<i class="fas fa-image"></i> Download Image';
+                        downloadBtn.disabled = false;
                     }
-                    showToast('Failed to generate invoice', 'error');
+                    showToast('Failed to generate image', 'error');
                 });
             };
 
+            // If Chrome loads this with auto_download=true, it triggers image conversion and upload automatically
             if (isAutoDownload) {
-                showToast('Generating PDF in browser...', 'notification');
-                setTimeout(triggerPdfDownload, 1500);
+                showToast('Preparing Image...', 'notification');
+                // Gives DOM a little time to stabilize fonts and images before canvas drawing
+                setTimeout(triggerImageUploadAndRedirect, 1500);
             }
 
-            document.getElementById('execute-download-pdf-btn').onclick = (e) => {
+            document.getElementById('execute-download-btn').onclick = (e) => {
                 e.preventDefault();
                 const isWebView = /wv|android.*version\/[\d.]+.*chrome/i.test(navigator.userAgent);
                 const isAndroid = /android/i.test(navigator.userAgent);
@@ -3799,9 +3817,10 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 const currentPath = window.location.pathname;
                 const scheme = window.location.protocol.replace(':', '');
 
-                // If inside an APK/WebView, redirect to external browser
+                // If inside an APK/WebView, redirect to external Chrome browser
                 if (isWebView || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
                     if (currentHost) {
+                        // Using Intent filter to forcefully open external browser app
                         const intentUrl = `intent://${currentHost}${currentPath}#invoice-preview?id=${order.id}&auto_download=true#Intent;scheme=${scheme};action=android.intent.action.VIEW;end;`;
                         window.location.href = intentUrl;
                         showToast('Redirecting to browser...', 'success');
@@ -3809,9 +3828,9 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         window.open(`${window.location.origin}${window.location.pathname}#invoice-preview?id=${order.id}&auto_download=true`, '_blank');
                     }
                 } 
-                // If normal browser, just open a new tab and auto-download
+                // If normal browser, generate and upload image right here
                 else {
-                     window.open(`${window.location.origin}${window.location.pathname}#invoice-preview?id=${order.id}&auto_download=true`, '_blank');
+                     triggerImageUploadAndRedirect();
                 }
             };
         };
@@ -4101,7 +4120,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         const detectCurrentLocation = async () => {
             const button = document.getElementById('detect-location-btn'); const messageDiv = document.getElementById('location-message'); const isWebView = detectAndroidWebView(); if (!navigator.geolocation) { if(messageDiv) messageDiv.innerHTML = '<p style="color:red">Geolocation not supported.</p>'; return; }
             if (button) { button.disabled = true; button.innerHTML = isWebView ? '<i class="fas fa-satellite-dish"></i> Requesting GPS...' : 'Detecting...'; } if (isWebView) { showToast("Requesting System Location...", "notification"); }
-            try { const position = await new Promise((resolve,reject) => { navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }); }); const { latitude, longitude } = position.coords; currentDetectedLocation = { latitude, longitude }; const address = await reverseGeocode(latitude, longitude);
+            try { const position = await new Promise((resolve, reject) => { navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }); }); const { latitude, longitude } = position.coords; currentDetectedLocation = { latitude, longitude }; const address = await reverseGeocode(latitude, longitude);
                 
                 isLocationCaptured = true; 
                 currentDetectedAddress = {
