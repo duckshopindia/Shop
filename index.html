@@ -11,8 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />  
-    
-    <!-- PDF Generation Library -->
+
+    <!-- Added html2pdf for Fast Invoice Download inside Browser/APK -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>  
@@ -1821,6 +1821,11 @@
             <!-- Content will be injected by JavaScript with ORIGINAL Layout -->  
         </section>  
 
+        <!-- Invoice Preview Page (NEW IMPLEMENTATION) -->
+        <section id="invoice-preview-page" class="page protected-route d-none">
+            <!-- Content will be injected by JavaScript -->
+        </section>
+
         <!-- Profile Page (MODIFIED: REMOVED TITLE) -->  
         <section id="profile-page" class="page protected-route d-none">  
             <!-- Removed Title "My Profile" as requested -->
@@ -2644,6 +2649,7 @@
             else if(b==='#checkout-payment')renderCheckoutPaymentPage(); 
             else if(b==='#orders')renderOrders();  
             else if(b==='#order'&&p.has('id'))renderOrderDetailPage(p.get('id'));   
+            else if(b==='#invoice-preview'&&p.has('id'))renderInvoicePreviewPage(p.get('id'));
             
             // RESELLING ROUTES
             else if(b==='#reselling-join') renderResellingJoinPage();
@@ -2705,6 +2711,7 @@
             if(b==='#product'&&p.has('id')){t=document.getElementById('product-detail-page');}   
             else if(b==='#category'&&p.has('id')){t=document.getElementById('category-products-page');}    
             else if(b==='#order'&&p.has('id')){t=document.getElementById('order-detail-page');}  
+            else if(b==='#invoice-preview'&&p.has('id')){t=document.getElementById('invoice-preview-page');}
             else if(b==='#order-confirmation'){t=document.getElementById('order-confirmation-page');}  
             else if(b==='#auth'){t=document.getElementById('auth-check-page');} 
             else if(b==='#login'){t=document.getElementById('login-page');}  
@@ -2741,7 +2748,7 @@
 
             updateCurrentView();   
             document.querySelectorAll('.nav-link, .side-menu-link').forEach(l=>{ const lh=l.getAttribute('href'); l.classList.toggle('active',(lh===b)||(b==='#category'&&lh==='#categories')||(b==='#order'&&lh==='#orders')||(b==='#reselling-dashboard'&&lh.startsWith('#resell'))||(lh==='#policy'&&b==='#policy')); });   
-            const protectedRoutes =['#orders', '#profile', '#checkout', '#payment', '#order', '#order-confirmation', '#reselling-dashboard', '#reselling-create', '#reselling-link-details'];  
+            const protectedRoutes =['#orders', '#profile', '#checkout', '#payment', '#order', '#order-confirmation', '#reselling-dashboard', '#reselling-create', '#reselling-link-details', '#invoice-preview'];  
             if(protectedRoutes.some(route => b.startsWith(route)) && !currentUser){ window.location.hash='#auth'; showToast('Please log in.','error'); }   
             document.querySelector('.main-nav.active')?.classList.remove('active');   
             window.scrollTo(0,0);   
@@ -3478,7 +3485,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             }).join('');  
         };  
 
-        // ORIGINAL PREMIUM ORDER DETAIL PAGE RENDERER (RESTORED)
+        // ORIGINAL PREMIUM ORDER DETAIL PAGE RENDERER
         const renderOrderDetailPage = (orderId) => {  
             const container = document.getElementById('order-detail-page'); 
             const order = allOrders[orderId]; 
@@ -3555,6 +3562,11 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         ${order.discount > 0 ? `<div class="cart-summary-item" style="color: var(--theme-green);"><span>Discount (${order.discountCode || ''}):</span><span>-${formatCurrency(order.discount)}</span></div>` : ''}
                         ${order.walletDeduction > 0 ? `<div class="cart-summary-item" style="color: var(--theme-blue);"><span>Wallet Paid:</span><span>-${formatCurrency(order.walletDeduction)}</span></div>` : ''}
                         <div class="cart-summary-item total"><span>Total Amount:</span><span>${formatCurrency(order.total)}</span></div>
+                        
+                        <!-- MODIFIED INVOICE PREVIEW BUTTON -->
+                        <a href="#invoice-preview?id=${order.id}" class="btn btn-primary" style="display: block; text-align: center; width: 100%; margin-top: 1.5rem; background-color: #fff; color: var(--theme-blue); border: 1px solid var(--theme-blue);">
+                            <i class="fas fa-file-invoice"></i> Preview Invoice
+                        </a>
                     </div>
                     
                     <div class="order-detail-card">
@@ -3564,122 +3576,209 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         <p>${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}</p>
                         <p>Phone: ${order.shippingDetails.phone}</p>
                     </div>
-
-                    <!-- INVOICE SECTION -->
-                    <div class="order-detail-card text-center" style="margin-top: 1rem;">
-                        <h3 style="margin-bottom: 1rem;">Order Invoice</h3>
-                        ${isDelivered ? 
-                            `<button class="btn btn-primary" data-action="download-invoice" data-id="${order.id}" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                                <i class="fas fa-file-pdf" style="font-size: 1.2rem;"></i> Download Invoice
-                            </button>` : 
-                            `<button class="btn btn-outline" disabled style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: not-allowed;">
-                                <i class="fas fa-lock" style="font-size: 1.2rem;"></i> Invoice Locked (Available after delivery)
-                            </button>`
-                        }
-                    </div>
                 </div>`;  
         };  
-
-        // NEW PDF INVOICE DOWNLOAD FUNCTION
-        const downloadInvoice = (orderId) => {
+        
+        // ==============================================================
+        // INVOICE PREVIEW PAGE GENERATION LOGIC
+        // ==============================================================
+        const renderInvoicePreviewPage = (orderId) => {
+            const container = document.getElementById('invoice-preview-page');
             const order = allOrders[orderId];
-            if (!order) return;
-            
-            showToast("Preparing invoice download...");
+            if (!order || order.userId !== currentUser.phone) {
+                container.innerHTML = '<div class="container"><p class="empty-list-message">Order not found.</p></div>';
+                return;
+            }
 
-            const invoiceDiv = document.createElement('div');
-            invoiceDiv.style.position = 'absolute';
-            invoiceDiv.style.left = '-9999px';
-            invoiceDiv.style.top = '0';
-            document.body.appendChild(invoiceDiv);
+            const numericOrderId = generateNumericOrderId(order.id);
+            const formattedDate = new Date(order.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-            const itemsHtml = Object.values(order.items).map(item => `
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ccc;">${item.name} ${item.selectedVariantName ? `(${item.selectedVariantName})` : ''}</td>
-                    <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${item.quantity}</td>
-                    <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatCurrency(item.price)}</td>
-                    <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatCurrency(item.price * item.quantity)}</td>
-                </tr>
-            `).join('');
+            const itemsHtml = Object.values(order.items).map((item, index) => {
+                const variantText = item.selectedVariantName ? `<br><small style="color:#777;">Option: ${item.selectedVariantName}</small>` : '';
+                return `
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 12px 10px; text-align: left; border-right: 1px solid #ddd;">${index + 1}</td>
+                    <td style="padding: 12px 10px; text-align: left; border-right: 1px solid #ddd;"><strong>${item.name}</strong>${variantText}</td>
+                    <td style="padding: 12px 10px; text-align: center; border-right: 1px solid #ddd;">${item.quantity}</td>
+                    <td style="padding: 12px 10px; text-align: right; border-right: 1px solid #ddd;">${formatCurrency(item.price)}</td>
+                    <td style="padding: 12px 10px; text-align: right;">${formatCurrency(item.price * item.quantity)}</td>
+                </tr>`;
+            }).join('');
 
-            invoiceDiv.innerHTML = `
-                <div style="padding: 30px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff; width: 800px;">
-                    <div style="text-align: right; border-bottom: 2px solid #388e3c; padding-bottom: 15px; margin-bottom: 20px;">
-                        <h1 style="margin: 0; font-size: 32px; font-weight: 800;"><span style="color: #000;">Duck</span><span style="color: #388e3c;">Shop</span></h1>
-                        <p style="margin: 5px 0 0; font-size: 14px; color: #666; font-weight: 600;">Tax Invoice / Bill of Supply</p>
+            let subtotalRow = `
+            <tr>
+                <td colspan="4" style="text-align: right; padding: 10px; border-top: 1px solid #ddd;"><strong>Subtotal:</strong></td>
+                <td style="text-align: right; padding: 10px; border-top: 1px solid #ddd;">${formatCurrency(order.subtotal)}</td>
+            </tr>`;
+
+            let deliveryRow = `
+            <tr>
+                <td colspan="4" style="text-align: right; padding: 10px;"><strong>Delivery Fee:</strong></td>
+                <td style="text-align: right; padding: 10px;">+ ${formatCurrency(order.deliveryFee)}</td>
+            </tr>`;
+
+            let discountRow = '';
+            if (order.discount > 0) {
+                discountRow = `
+                <tr style="color: #388e3c;">
+                    <td colspan="4" style="text-align: right; padding: 10px;"><strong>Discount:</strong></td>
+                    <td style="text-align: right; padding: 10px;">- ${formatCurrency(order.discount)}</td>
+                </tr>`;
+            }
+
+            let walletRow = '';
+            if (order.walletDeduction > 0) {
+                walletRow = `
+                <tr style="color: #2874f0;">
+                    <td colspan="4" style="text-align: right; padding: 10px;"><strong>Wallet Paid:</strong></td>
+                    <td style="text-align: right; padding: 10px;">- ${formatCurrency(order.walletDeduction)}</td>
+                </tr>`;
+            }
+
+            let totalRow = `
+            <tr style="background-color: #f9f9f9;">
+                <td colspan="4" style="text-align: right; padding: 12px 10px; font-size: 14px;"><strong>Total Amount:</strong></td>
+                <td style="text-align: right; padding: 12px 10px; font-size: 14px;"><strong>${formatCurrency(order.total)}</strong></td>
+            </tr>`;
+
+            // Inject the full Preview Page
+            container.innerHTML = `
+                <div class="home-specific-header">
+                    <h2 style="font-size: 1.1rem; font-weight: 500;"><i class="fas fa-file-invoice"></i> Invoice Preview</h2>
+                </div>
+                <div class="container" style="padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <a href="#order?id=${order.id}" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+                        <button id="execute-download-pdf-btn" class="btn btn-primary btn-sm" style="background-color: var(--theme-blue); border-color: var(--theme-blue); font-size: 1rem; padding: 8px 15px;">
+                            <i class="fas fa-download"></i> Download PDF
+                        </button>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="width: 48%;">
-                            <h4 style="margin: 0 0 8px; font-size: 14px; color: #555; text-transform: uppercase;">Sold By:</h4>
-                            <p style="margin: 0 0 4px; font-size: 13px; font-weight: bold;">DuckShop E-Commerce</p>
-                            <p style="margin: 0 0 4px; font-size: 13px;">Main Branch</p>
-                            <p style="margin: 0; font-size: 13px;">Khowai, Tripura, 799201</p>
+                    <!-- A4 Size Wrapper - Make responsive horizontally -->
+                    <div id="invoice-preview-wrapper" style="width: 100%; overflow-x: auto; background: #e9ecef; padding: 15px 0; border-radius: 4px; display: flex; justify-content: center;">
+                        
+                        <!-- Fixed width to ensure stable PDF layout -->
+                        <div id="invoice-content-to-print" style="width: 800px; min-width: 800px; background: white; padding: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333;">
+                            
+                            <!-- Header: Logo & Invoice Info -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #2874f0; padding-bottom: 15px;">
+                                <div style="width: 50%;">
+                                    <h1 style="margin:0; font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif;">
+                                        <span style="color: #2874f0;">Duck</span><span style="color: #388e3c;">Shop</span>
+                                    </h1>
+                                    <p style="margin: 5px 0 0 0; font-size: 11px; color: #555;">Fast & Secure Shopping Experience</p>
+                                </div>
+                                <div style="width: 50%; text-align: right;">
+                                    <h2 style="margin: 0 0 8px 0; font-size: 22px; text-transform: uppercase; color: #333; letter-spacing: 1px;">Tax Invoice</h2>
+                                    <p style="margin: 0 0 3px 0; font-size: 12px;">Invoice / Order ID: <strong>${numericOrderId}</strong></p>
+                                    <p style="margin: 0; font-size: 12px;">Order Date: <strong>${formattedDate}</strong></p>
+                                </div>
+                            </div>
+
+                            <!-- Addresses (Sold By on Left, Billing on Right) -->
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                                <!-- LEFT: Sold By -->
+                                <div style="width: 45%;">
+                                    <p style="margin: 0 0 8px 0; font-size: 13px; color: #212121; font-weight: 600;">Sold By:</p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;"><strong>DuckShop Retail Pvt. Ltd.</strong></p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;">Central Hub, Khowai</p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;">Tripura - 799201</p>
+                                    <p style="margin: 10px 0 0 0; font-size: 12px;">Support: <strong>duckshopindiacustomercare@gmail.com</strong></p>
+                                </div>
+                                
+                                <!-- RIGHT: Billing & Shipping Address -->
+                                <div style="width: 45%; text-align: right;">
+                                    <p style="margin: 0 0 8px 0; font-size: 13px; color: #212121; font-weight: 600;">Billing & Shipping Address:</p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;"><strong>${order.shippingDetails.name}</strong></p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;">${order.shippingDetails.fullAddress}</p>
+                                    <p style="margin: 0 0 4px 0; font-size: 12px;">${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}</p>
+                                    <p style="margin: 0; font-size: 12px;">Phone Number: <strong>${order.shippingDetails.phone}</strong></p>
+                                </div>
+                            </div>
+
+                            <!-- Items Table (Green Header) -->
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; border: 1px solid #ddd;">
+                                <thead>
+                                    <tr style="background-color: #388e3c; color: white;">
+                                        <th style="text-align: left; padding: 12px 10px; border-right: 1px solid #2e7d32; width: 5%;">#</th>
+                                        <th style="text-align: left; padding: 12px 10px; border-right: 1px solid #2e7d32; width: 45%;">Product Description</th>
+                                        <th style="text-align: center; padding: 12px 10px; border-right: 1px solid #2e7d32; width: 10%;">Qty</th>
+                                        <th style="text-align: right; padding: 12px 10px; border-right: 1px solid #2e7d32; width: 20%;">Unit Price</th>
+                                        <th style="text-align: right; padding: 12px 10px; width: 20%;">Gross Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHtml}
+                                </tbody>
+                            </table>
+
+                            <!-- Totals Table -->
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+                                <table style="width: 50%; border-collapse: collapse; font-size: 12px;">
+                                    ${subtotalRow}
+                                    ${deliveryRow}
+                                    ${discountRow}
+                                    ${walletRow}
+                                    ${totalRow}
+                                </table>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; margin-top: 20px;">
+                                <p style="margin: 0 0 5px 0; font-size: 10px; color: #878787;">This is a computer-generated invoice and does not require a physical signature.</p>
+                                <p style="margin: 0; font-size: 10px; color: #878787;">Thank you for shopping with DuckShop! We hope to see you again soon.</p>
+                            </div>
+
                         </div>
-                        <div style="width: 48%; text-align: right;">
-                            <h4 style="margin: 0 0 8px; font-size: 14px; color: #555; text-transform: uppercase;">Billing/Shipping Address:</h4>
-                            <p style="margin: 0 0 4px; font-size: 13px; font-weight: bold;">${order.shippingDetails.name}</p>
-                            <p style="margin: 0 0 4px; font-size: 13px;">${order.shippingDetails.fullAddress}</p>
-                            <p style="margin: 0 0 4px; font-size: 13px;">${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}</p>
-                            <p style="margin: 0; font-size: 13px;">Phone: ${order.shippingDetails.phone}</p>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f9f9f9; padding: 12px; border-radius: 4px; border: 1px solid #eee;">
-                        <div style="font-size: 13px;"><strong>Order ID:</strong> ${generateNumericOrderId(order.id)}</div>
-                        <div style="font-size: 13px;"><strong>Order Date:</strong> ${new Date(order.date).toLocaleDateString()}</div>
-                        <div style="font-size: 13px;"><strong>Invoice Date:</strong> ${new Date().toLocaleDateString()}</div>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;">
-                        <thead>
-                            <tr style="background: #f0f0f0;">
-                                <th style="padding: 10px; text-align: left; border: 1px solid #ccc; font-weight: 600;">Product Description</th>
-                                <th style="padding: 10px; text-align: center; border: 1px solid #ccc; font-weight: 600;">Qty</th>
-                                <th style="padding: 10px; text-align: right; border: 1px solid #ccc; font-weight: 600;">Unit Price</th>
-                                <th style="padding: 10px; text-align: right; border: 1px solid #ccc; font-weight: 600;">Total Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                    
-                    <div style="display: flex; justify-content: flex-end;">
-                        <table style="width: 40%; border-collapse: collapse; font-size: 13px;">
-                            <tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Subtotal:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${formatCurrency(order.subtotal)}</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Delivery Charge:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${formatCurrency(order.deliveryFee)}</td></tr>
-                            ${order.discount > 0 ? `<tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Discount:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold; color: #388e3c;">-${formatCurrency(order.discount)}</td></tr>` : ''}
-                            ${order.walletDeduction > 0 ? `<tr><td style="padding: 8px; border: 1px solid #ccc; color: #555;">Wallet Paid:</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold; color: #388e3c;">-${formatCurrency(order.walletDeduction)}</td></tr>` : ''}
-                            <tr style="background: #f0f0f0;"><td style="padding: 10px; font-weight: bold; border: 1px solid #ccc; font-size: 15px;">Grand Total:</td><td style="padding: 10px; font-weight: bold; text-align: right; border: 1px solid #ccc; font-size: 15px;">${formatCurrency(order.total)}</td></tr>
-                        </table>
-                    </div>
-                    
-                    <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #888; border-top: 1px dashed #ccc; padding-top: 15px;">
-                        <p style="margin: 0 0 5px;">Thank you for shopping with DuckShop!</p>
-                        <p style="margin: 0;">This is a computer-generated invoice and does not require a physical signature.</p>
                     </div>
                 </div>
             `;
 
-            const fileName = `DuckShop Order ID ${generateNumericOrderId(order.id)}.pdf`;
+            // Attach event listener for the download button inside the preview
+            document.getElementById('execute-download-pdf-btn').onclick = () => {
+                const invoiceElement = document.getElementById('invoice-content-to-print');
+                const opt = {
+                    margin: 0,
+                    filename: `DuckShop_Invoice_${numericOrderId}.pdf`,
+                    image: { type: 'jpeg', quality: 1 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
 
-            const opt = {
-                margin:       0,
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                const downloadPdfBtn = document.getElementById('execute-download-pdf-btn');
+                const originalText = downloadPdfBtn.innerHTML;
+                downloadPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+                downloadPdfBtn.disabled = true;
+
+                // Using outputPdf blob approach for auto-download and APK browser support
+                html2pdf().set(opt).from(invoiceElement).outputPdf('blob').then((blob) => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // 1. Opens the PDF Blob in browser/new tab
+                    window.open(blobUrl, '_blank');
+                    
+                    // 2. Fallback to trigger explicit automatic download
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = opt.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(blobUrl);
+                    }, 100);
+
+                    downloadPdfBtn.innerHTML = originalText;
+                    downloadPdfBtn.disabled = false;
+                    showToast('Download started!', 'success');
+                }).catch(err => {
+                    console.error('PDF Generation Error:', err);
+                    downloadPdfBtn.innerHTML = originalText;
+                    downloadPdfBtn.disabled = false;
+                    showToast('Failed to generate invoice', 'error');
+                });
             };
-
-            html2pdf().set(opt).from(invoiceDiv.firstElementChild).save().then(() => {
-                document.body.removeChild(invoiceDiv);
-                showToast("Invoice downloaded successfully!", "success");
-            }).catch(err => {
-                console.error("PDF generation error: ", err);
-                document.body.removeChild(invoiceDiv);
-                showToast("Failed to generate invoice", "error");
-            });
         };
           
         const updateBadges = () => { const c=Object.values(userCart).reduce((s,i)=>s+i.quantity,0); if (bottomCartBadge) bottomCartBadge.textContent = c > 0 ? c : ''; if (favouritesBadge) favouritesBadge.textContent = userFavourites.length > 0 ? userFavourites.length : ''; };  
@@ -3951,10 +4050,6 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
                 this.classList.add('selected');
             };
-            
-            // FIXED: Removed duplicate event listener assignment to prevent DOUBLE ORDER
-            // const confirmBtn = document.getElementById('final-confirm-order-btn');
-            // confirmBtn.onclick = placeOrder; 
         };
 
         const updateLocationCaptureStatus = () => { const statusDiv = document.getElementById('location-capture-status'); const badge = statusDiv.querySelector('.location-capture-badge'); if (isLocationCaptured) { statusDiv.classList.add('captured'); badge.textContent = 'Captured'; badge.className = 'location-capture-badge captured'; statusDiv.querySelector('p').textContent = 'Location captured successfully!'; } else { statusDiv.classList.remove('captured'); badge.textContent = 'Not Captured'; badge.className = 'location-capture-badge not-captured'; statusDiv.querySelector('p').textContent = 'Current location is required. Please click the button below.'; } };
@@ -4136,7 +4231,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
 
                 updates[`orders/${orderData.id}`] = orderData;
                 
-                for (const cid in userCart) { const i = userCart[cid], p = allProducts.find(pr =>pr.id === i.id); if (i.selectedVariantName) { const vIndex = p.variants.findIndex(v => v.name === i.selectedVariantName); if (vIndex !== -1) updates[`/products/${i.id}/variants/${vIndex}/stock`] = p.variants[vIndex].stock - i.quantity; } else { updates[`/products/${i.id}/stock`] = p.stock - i.quantity; } } 
+                for (const cid in userCart) { const i = userCart[cid], p = allProducts.find(pr => pr.id === i.id); if (i.selectedVariantName) { const vIndex = p.variants.findIndex(v => v.name === i.selectedVariantName); if (vIndex !== -1) updates[`/products/${i.id}/variants/${vIndex}/stock`] = p.variants[vIndex].stock - i.quantity; } else { updates[`/products/${i.id}/stock`] = p.stock - i.quantity; } } 
                 
                 await update(ref(db), updates); 
                 
@@ -4545,11 +4640,13 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         
         homeSearchTrigger.addEventListener('click', ()=>{window.location.hash='#search';});  
         actualSearchInput.addEventListener('input', handleSearchInput);  
+        
         document.addEventListener('click', (e) => {
             if (e.target.closest('#enable-notifications-btn')) { e.preventDefault(); requestPermissionAndGetToken(); }
             if (e.target.id === 'detect-location-btn' || e.target.closest('#detect-location-btn')) { e.preventDefault(); detectCurrentLocation(); }
             if (e.target.closest('.toast.notification')) { window.location.hash = '#orders'; }
         });
+        
         document.addEventListener('click', (e) => {  
             const actionTarget = e.target.closest('[data-action]');  
             if (actionTarget) {  
@@ -4616,8 +4713,6 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                          }
                          break;
                     }
-                    // NEW INVOICE DOWNLOAD HANDLER
-                    case 'download-invoice': downloadInvoice(id); break;
                 }  
             } else if (e.target.id === 'final-confirm-order-btn') { placeOrder();  
             } else if (e.target.id === 'checkout-btn') { 
@@ -4643,6 +4738,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         });  
 
         document.getElementById('old-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const oldPassInput = document.getElementById('old-password'); const oldPass = oldPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); let targetUserPassword = null; if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (passwordRecoveryUserPhone) { const userSnap = await get(ref(db, `users/${targetUserPhone}`)); if (userSnap.exists()) { targetUserPassword = userSnap.val().password; } } else if (currentUser) { targetUserPassword = currentUser.password; } if (oldPass === targetUserPassword) { window.location.hash = '#new-password'; oldPassInput.value = ''; } else { showToast('Incorrect old password.', 'error'); } });  
+        
         document.getElementById('new-password-form').addEventListener('submit', async (e) => { e.preventDefault(); const newPassInput = document.getElementById('new-password'); const confirmPassInput = document.getElementById('confirm-password'); const newPass = newPassInput.value; let targetUserPhone = passwordRecoveryUserPhone || (currentUser ? currentUser.phone : null); if (!targetUserPhone) { showToast('Session expired. Please start over.', 'error'); window.location.hash = '#auth'; return; } if (newPass.length < 1) { showToast('Password cannot be empty.', 'error'); return; } if (newPass !== confirmPassInput.value) { showToast('Passwords do not match.', 'error'); return; } try { await set(ref(db, `users/${targetUserPhone}/password`), newPass); if (currentUser && currentUser.phone === targetUserPhone) { currentUser.password = newPass; } showToast('Password changed successfully!', 'success'); newPassInput.value = ''; confirmPassInput.value = ''; if (passwordRecoveryUserPhone) { passwordRecoveryUserPhone = null; window.location.hash = '#auth'; } else { window.location.hash = '#profile'; } } catch (err) { showToast('Failed to change password.', 'error'); } });  
     </script>
 
