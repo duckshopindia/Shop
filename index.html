@@ -3745,74 +3745,49 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     downloadBtn.disabled = true;
                 }
 
-                // Generates high quality PNG (scale 2) and exactly width 800
-                html2canvas(invoiceElement, { 
-                    scale: 2, 
-                    useCORS: true, 
-                    backgroundColor: '#ffffff',
-                    windowWidth: 800 
-                }).then((canvas) => {
-                    // Get base64 string without data type prefix
-                    const base64Image = canvas.toDataURL('image/png').split(',')[1];
-                    
-                    const formData = new FormData();
-                    formData.append('image', base64Image);
-                    formData.append('name', `DuckShop_Order_ID_${numericOrderId}`);
-                    
-                    fetch('https://api.imgbb.com/1/upload?key=0833dcd0900022eda284f45f4a9737d7', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if(result.success) {
-                            const imageUrl = result.data.url; // direct image url
-                            
-                            // Safe Link Opening System (No ERR_UNKNOWN_URL_SCHEME)
-                            const a = document.createElement('a');
-                            a.href = imageUrl;
-                            a.target = '_blank';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            
-                            // Fallback: Agar App target="_blank" block karta hai, toh usi app mein URL khol dega
-                            setTimeout(() => {
-                                window.location.href = imageUrl;
-                            }, 500);
-                            
-                            if(downloadBtn) {
-                                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
-                                downloadBtn.disabled = false;
-                            }
-                            showToast('Image opened successfully!', 'success');
-                        } else {
-                            throw new Error('Upload failed');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Imgbb Upload Error:', err);
-                        if(downloadBtn) {
-                            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
-                            downloadBtn.disabled = false;
-                        }
-                        showToast('Failed to upload image', 'error');
-                    });
-                }).catch(err => {
-                    console.error('Canvas Generation Error:', err);
+               // ==========================================
+            // DIRECT PDF DOWNLOAD LOGIC
+            // ==========================================
+            const triggerPDFDownload = () => {
+                const invoiceElement = document.getElementById('invoice-content-to-print');
+                const downloadBtn = document.getElementById('execute-download-btn');
+                
+                if(downloadBtn) {
+                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+                    downloadBtn.disabled = true;
+                }
+
+                // PDF Settings
+                const opt = {
+                    margin:       [0.2, 0.2, 0.2, 0.2], // Thoda margin de rahe hain
+                    filename:     `DuckShop_Invoice_${numericOrderId}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Generate and Download PDF
+                html2pdf().set(opt).from(invoiceElement).save().then(() => {
                     if(downloadBtn) {
-                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
+                        downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
                         downloadBtn.disabled = false;
                     }
-                    showToast('Failed to generate image', 'error');
+                    showToast('PDF Downloaded Successfully!', 'success');
+                }).catch(err => {
+                    console.error('PDF Generation Error:', err);
+                    if(downloadBtn) {
+                        downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+                        downloadBtn.disabled = false;
+                    }
+                    showToast('Failed to generate PDF', 'error');
                 });
             };
 
             // BUTTON CLICK EVENT
             document.getElementById('execute-download-btn').onclick = (e) => {
                 e.preventDefault();
-                // Direct process image and open ImgBB link
-                triggerImageUploadAndRedirect();
+                // Direct PDF download trigger karega
+                triggerPDFDownload();
             };
         };
           
