@@ -3735,7 +3735,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 </div>
             `;
 
-         // BROWSER REDIRECT AND AUTO UPLOAD LOGIC (UPDATED)
+// BROWSER REDIRECT AND AUTO UPLOAD LOGIC (FIXED - NO INTENT ERROR)
             const triggerImageUploadAndRedirect = () => {
                 const invoiceElement = document.getElementById('invoice-content-to-print');
                 const downloadBtn = document.getElementById('execute-download-btn');
@@ -3768,25 +3768,24 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         if(result.success) {
                             const imageUrl = result.data.url; // direct image url
                             
-                            // Check if running inside App/WebView
-                            const isWebView = /wv|android.*version\/[\d.]+.*chrome/i.test(navigator.userAgent);
-                            const isAndroid = /android/i.test(navigator.userAgent);
-
-                            if (isWebView || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
-                                // Force open external browser with ONLY the ImgBB link
-                                const cleanUrl = imageUrl.replace(/^https?:\/\//, '');
-                                const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end;`;
-                                window.location.href = intentUrl;
-                            } else {
-                                // Normal browser: open in new tab
-                                window.open(imageUrl, '_blank') || (window.location.href = imageUrl);
-                            }
+                            // Safe Link Opening System (No ERR_UNKNOWN_URL_SCHEME)
+                            const a = document.createElement('a');
+                            a.href = imageUrl;
+                            a.target = '_blank';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            // Fallback: Agar App target="_blank" block karta hai, toh usi app mein URL khol dega
+                            setTimeout(() => {
+                                window.location.href = imageUrl;
+                            }, 500);
                             
                             if(downloadBtn) {
                                 downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
                                 downloadBtn.disabled = false;
                             }
-                            showToast('Image opened in browser!', 'success');
+                            showToast('Image opened successfully!', 'success');
                         } else {
                             throw new Error('Upload failed');
                         }
@@ -3812,7 +3811,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             // BUTTON CLICK EVENT
             document.getElementById('execute-download-btn').onclick = (e) => {
                 e.preventDefault();
-                // Direct process image and open ImgBB link (no app redirect loop)
+                // Direct process image and open ImgBB link
                 triggerImageUploadAndRedirect();
             };
         };
