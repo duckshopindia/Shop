@@ -3821,7 +3821,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 if (isWebView || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
                     if (currentHost) {
                         // Using Intent filter to forcefully open external browser app
-                        const intentUrl = `intent://${currentHost}${currentPath}#invoice-preview?id=${order.id}&auto_download=true#Intent;scheme=${scheme};action=android.intent.action.VIEW;end;`;
+                        const intentUrl = `intent:// ${currentHost}${currentPath}#invoice-preview?id=${order.id}&auto_download=true#Intent;scheme=${scheme};action=android.intent.action.VIEW;end;`;
                         window.location.href = intentUrl;
                         showToast('Redirecting to browser...', 'success');
                     } else {
