@@ -3735,10 +3735,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 </div>
             `;
 
-            // BROWSER REDIRECT AND AUTO UPLOAD LOGIC
-            const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-            const isAutoDownload = urlParams.get('auto_download') === 'true';
-
+         // BROWSER REDIRECT AND AUTO UPLOAD LOGIC (UPDATED)
             const triggerImageUploadAndRedirect = () => {
                 const invoiceElement = document.getElementById('invoice-content-to-print');
                 const downloadBtn = document.getElementById('execute-download-btn');
@@ -3760,7 +3757,6 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     
                     const formData = new FormData();
                     formData.append('image', base64Image);
-                    // Specific name format given
                     formData.append('name', `DuckShop_Order_ID_${numericOrderId}`);
                     
                     fetch('https://api.imgbb.com/1/upload?key=0833dcd0900022eda284f45f4a9737d7', {
@@ -3772,14 +3768,25 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         if(result.success) {
                             const imageUrl = result.data.url; // direct image url
                             
-                            // Redirect user to the uploaded image URL
-                            window.location.href = imageUrl;
+                            // Check if running inside App/WebView
+                            const isWebView = /wv|android.*version\/[\d.]+.*chrome/i.test(navigator.userAgent);
+                            const isAndroid = /android/i.test(navigator.userAgent);
+
+                            if (isWebView || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
+                                // Force open external browser with ONLY the ImgBB link
+                                const cleanUrl = imageUrl.replace(/^https?:\/\//, '');
+                                const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end;`;
+                                window.location.href = intentUrl;
+                            } else {
+                                // Normal browser: open in new tab
+                                window.open(imageUrl, '_blank') || (window.location.href = imageUrl);
+                            }
                             
                             if(downloadBtn) {
-                                downloadBtn.innerHTML = '<i class="fas fa-image"></i> View Image';
+                                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
                                 downloadBtn.disabled = false;
                             }
-                            showToast('Image generated successfully!', 'success');
+                            showToast('Image opened in browser!', 'success');
                         } else {
                             throw new Error('Upload failed');
                         }
@@ -3787,7 +3794,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     .catch(err => {
                         console.error('Imgbb Upload Error:', err);
                         if(downloadBtn) {
-                            downloadBtn.innerHTML = '<i class="fas fa-image"></i> Download Image';
+                            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
                             downloadBtn.disabled = false;
                         }
                         showToast('Failed to upload image', 'error');
@@ -3795,43 +3802,18 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 }).catch(err => {
                     console.error('Canvas Generation Error:', err);
                     if(downloadBtn) {
-                        downloadBtn.innerHTML = '<i class="fas fa-image"></i> Download Image';
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
                         downloadBtn.disabled = false;
                     }
                     showToast('Failed to generate image', 'error');
                 });
             };
 
-            // If Chrome loads this with auto_download=true, it triggers image conversion and upload automatically
-            if (isAutoDownload) {
-                showToast('Preparing Image...', 'notification');
-                // Gives DOM a little time to stabilize fonts and images before canvas drawing
-                setTimeout(triggerImageUploadAndRedirect, 1500);
-            }
-
+            // BUTTON CLICK EVENT
             document.getElementById('execute-download-btn').onclick = (e) => {
                 e.preventDefault();
-                const isWebView = /wv|android.*version\/[\d.]+.*chrome/i.test(navigator.userAgent);
-                const isAndroid = /android/i.test(navigator.userAgent);
-                const currentHost = window.location.host;
-                const currentPath = window.location.pathname;
-                const scheme = window.location.protocol.replace(':', '');
-
-                // If inside an APK/WebView, redirect to external Chrome browser
-                if (isWebView || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
-                    if (currentHost) {
-                        // Using Intent filter to forcefully open external browser app
-                        const intentUrl = `intent://${currentHost}${currentPath}#invoice-preview?id=${order.id}&auto_download=true#Intent;scheme=${scheme};action=android.intent.action.VIEW;end;`;
-                        window.location.href = intentUrl;
-                        showToast('Redirecting to browser...', 'success');
-                    } else {
-                        window.open(`${window.location.origin}${window.location.pathname}#invoice-preview?id=${order.id}&auto_download=true`, '_blank');
-                    }
-                } 
-                // If normal browser, generate and upload image right here
-                else {
-                     triggerImageUploadAndRedirect();
-                }
+                // Direct process image and open ImgBB link (no app redirect loop)
+                triggerImageUploadAndRedirect();
             };
         };
           
