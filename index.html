@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />  
 
-    <!-- Added html2canvas for Image Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Changed: html2pdf library added for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>  
         /* =================================================================  
@@ -1823,7 +1823,7 @@
             <!-- Content will be injected by JavaScript with ORIGINAL Layout -->  
         </section>  
 
-        <!-- Invoice Preview Page (NEW IMPLEMENTATION - MOBILE FRIENDLY) -->
+        <!-- Invoice Preview Page -->
         <section id="invoice-preview-page" class="page protected-route d-none">
             <!-- Content will be injected by JavaScript -->
         </section>
@@ -3581,7 +3581,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         };  
         
         // ==============================================================
-        // INVOICE PREVIEW PAGE GENERATION LOGIC (IMAGE UPLOAD VIA IMGBB)
+        // INVOICE PREVIEW PAGE GENERATION LOGIC (PDF System)
         // ==============================================================
         const renderInvoicePreviewPage = (orderId) => {
             const container = document.getElementById('invoice-preview-page');
@@ -3651,14 +3651,14 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <a href="#order?id=${order.id}" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
                         <button id="execute-download-btn" class="btn btn-primary btn-sm" style="background-color: var(--theme-blue); border-color: var(--theme-blue); font-size: 1rem; padding: 8px 15px;">
-                            <i class="fas fa-download"></i> Download / View Image
+                            <i class="fas fa-file-pdf"></i> Download PDF
                         </button>
                     </div>
                     
                     <!-- PERFECTLY MOBILE RESPONSIVE PREVIEW WRAPPER -->
                     <div id="invoice-preview-wrapper" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #e9ecef; padding: 15px; border-radius: 4px; display: block; text-align: center; white-space: nowrap;">
                         
-                        <!-- Fixed A4 Ratio box (width 800px, min-height 1131px) ensures perfect image layout -->
+                        <!-- Fixed A4 Ratio box (width 800px, min-height 1131px) ensures perfect layout -->
                         <div id="invoice-content-to-print" style="display: inline-block; text-align: left; width: 800px; min-height: 1131px; box-sizing: border-box; background: white; padding: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; white-space: normal; line-height: 1.5; letter-spacing: normal; word-spacing: normal; position: relative;">
                             
                             <!-- Header: Logo & Invoice Info -->
@@ -3735,84 +3735,49 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 </div>
             `;
 
-// BROWSER REDIRECT AND AUTO UPLOAD LOGIC (FIXED - NO INTENT ERROR)
-            const triggerImageUploadAndRedirect = () => {
+            // ==========================================
+            // DIRECT PDF DOWNLOAD LOGIC
+            // ==========================================
+            const triggerPDFDownload = () => {
                 const invoiceElement = document.getElementById('invoice-content-to-print');
                 const downloadBtn = document.getElementById('execute-download-btn');
                 
                 if(downloadBtn) {
-                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
                     downloadBtn.disabled = true;
                 }
 
-                // Generates high quality PNG (scale 2) and exactly width 800
-                html2canvas(invoiceElement, { 
-                    scale: 2, 
-                    useCORS: true, 
-                    backgroundColor: '#ffffff',
-                    windowWidth: 800 
-                }).then((canvas) => {
-                    // Get base64 string without data type prefix
-                    const base64Image = canvas.toDataURL('image/png').split(',')[1];
-                    
-                    const formData = new FormData();
-                    formData.append('image', base64Image);
-                    formData.append('name', `DuckShop_Order_ID_${numericOrderId}`);
-                    
-                    fetch('https://api.imgbb.com/1/upload?key=0833dcd0900022eda284f45f4a9737d7', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if(result.success) {
-                            const imageUrl = result.data.url; // direct image url
-                            
-                            // Safe Link Opening System (No ERR_UNKNOWN_URL_SCHEME)
-                            const a = document.createElement('a');
-                            a.href = imageUrl;
-                            a.target = '_blank';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            
-                            // Fallback: Agar App target="_blank" block karta hai, toh usi app mein URL khol dega
-                            setTimeout(() => {
-                                window.location.href = imageUrl;
-                            }, 500);
-                            
-                            if(downloadBtn) {
-                                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
-                                downloadBtn.disabled = false;
-                            }
-                            showToast('Image opened successfully!', 'success');
-                        } else {
-                            throw new Error('Upload failed');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Imgbb Upload Error:', err);
-                        if(downloadBtn) {
-                            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
-                            downloadBtn.disabled = false;
-                        }
-                        showToast('Failed to upload image', 'error');
-                    });
-                }).catch(err => {
-                    console.error('Canvas Generation Error:', err);
+                // PDF Settings
+                const opt = {
+                    margin:       [0.2, 0.2, 0.2, 0.2],
+                    filename:     `DuckShop_Invoice_${numericOrderId}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Generate and Download PDF
+                html2pdf().set(opt).from(invoiceElement).save().then(() => {
                     if(downloadBtn) {
-                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download / View Image';
+                        downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
                         downloadBtn.disabled = false;
                     }
-                    showToast('Failed to generate image', 'error');
+                    showToast('PDF Downloaded Successfully!', 'success');
+                }).catch(err => {
+                    console.error('PDF Generation Error:', err);
+                    if(downloadBtn) {
+                        downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+                        downloadBtn.disabled = false;
+                    }
+                    showToast('Failed to generate PDF', 'error');
                 });
             };
 
             // BUTTON CLICK EVENT
             document.getElementById('execute-download-btn').onclick = (e) => {
                 e.preventDefault();
-                // Direct process image and open ImgBB link
-                triggerImageUploadAndRedirect();
+                // Direct PDF download trigger karega
+                triggerPDFDownload();
             };
         };
           
@@ -4507,8 +4472,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
 
                         <div class="breakdown-card">
                             <h3 style="margin-bottom:1rem; border-bottom:1px solid #eee; padding-bottom:0.5rem;">Price Breakdown</h3>
-                            <div class="breakdown-row">
-                                <span>Original Product Price</span>
+                            <div class="breakdown-row"><span>Original Product Price</span>
                                 <span>${formatCurrency(basePrice)}</span>
                             </div>
                             <div class="breakdown-row" style="color:var(--theme-green);">
