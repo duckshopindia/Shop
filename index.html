@@ -2495,41 +2495,6 @@
             return deg * (Math.PI/180);
         }
 
-        // ==========================================================
-        // ONESIGNAL NOTIFICATION FUNCTION
-        // ==========================================================
-        async function sendOrderNotification(orderId, totalAmount) {
-            const oneSignalID = "4f665199-61c1-42cd-967c-0b965d5e1e62"; // Apna OneSignal App ID
-            const restKey = "os_v2_app_j5tfdglbyfbm3ft4bolf2xq6mlouwprczieuj4eepjngkecxrdyoqbw7xtpttfbxbguzncican2tc4gmf5ouhatwp5b7sqlv7vpihay"; // Apna REST API Key
-
-            const data = {
-                app_id: oneSignalID,
-                // Sirf unhe jayega jinka tag 'delivery_boy' hai
-                filters:[
-                    {"field": "tag", "key": "role", "relation": "=", "value": "delivery_boy"}
-                ],
-                headings: {"en": "Naya Order Aaya! 🛍️"},
-                contents: {"en": `Order ID: #${orderId.substr(-5)} ke liye ₹${totalAmount} ka naya order mila hai.`},
-                android_group: "orders",
-                priority: 10
-            };
-
-            try {
-                const response = await fetch("https://onesignal.com/api/v1/notifications", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Authorization": "Basic " + restKey
-                    },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                console.log("OneSignal Response:", result);
-            } catch (err) {
-                console.error("Notification Error:", err);
-            }
-        }
-
         const formatCurrency = (amount) => {
             if (amount === undefined || amount === null || isNaN(amount)) {
                 return '₹0.00';
@@ -2713,7 +2678,7 @@
         const listenForDiscounts = () => { onValue(ref(db,'discounts'),(s)=>{ validDiscounts={}; if(s.exists()){ Object.values(s.val()).forEach(d=>{ const c=d.code.toUpperCase(); validDiscounts[c]={...d,code:c}; }); } if(appliedDiscount)updateCartSummary(); }); };  
           
         const handleRouting = async () => {   
-            const h=window.location.hash||'#home'; const[b,q]=h.split('?'); const p=new URLSearchParams(q);  
+            const h=window.location.hash||'#home'; const [b,q]=h.split('?'); const p=new URLSearchParams(q);  
             
             // Welcome/Splash Logic - Handled by Splash Screen Div
             // Reset Layout
@@ -4187,6 +4152,24 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         };
         const reverseGeocode = async (lat, lng) => { try { const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`); if (!response.ok) throw new Error('Geocoding failed'); return await response.json(); } catch (error) { return { display_name: `Near ${lat.toFixed(4)}, ${lng.toFixed(4)}`, address: { postcode: '799201', city: 'Khowai', state: 'Tripura' } }; } };
         
+        // ==============================================================
+        // GOOGLE SCRIPT NOTIFICATION TRIGGER
+        // ==============================================================
+        const sendOrderNotification = () => {
+            const scriptURL = "https://script.googleusercontent.com/macros/echo?user_content_key=AWDtjMWWskaAXfRrO8PYF-kwCV6cFQrK10ayKgMqvPD4WJxoitmBtfexAjG0u03ec1cK1OUaPfAOWH1QRBqVkGBIw-cR5tfMpuet_FFzRFCz05jfGsTxVYoIebfoPlumXoRXbtq4NiTqOLHMZvSXvRXw9EZJhB626s59bYUqdrZTX8rHes9t6Sc_exqRBRMBCWT213g1ddUjDqArngECh9xO_B5yl4N4sDbHrZvgqnow6AisroQpNPMMIeO9UcAfdBGRYuj_sG7eNCiH-LDJll6mM0cQgQEcOYaStW6Kkrrw&lib=MryqxUWimge37jI3qCWGudvaeTgLFZKIR";
+
+            fetch(scriptURL, {
+                method: 'GET',
+                mode: 'no-cors' // This prevents any browser security blocks
+            })
+            .then(() => {
+                console.log("Notification request sent successfully to Delivery Boy.");
+            })
+            .catch((error) => {
+                console.error("Error triggering notification:", error);
+            });
+        };
+
         const placeOrder = async () => {  
             // 1. Check Shop Status
             const shopState = getShopState();
@@ -4303,11 +4286,9 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 for (const cid in userCart) { const i = userCart[cid], p = allProducts.find(pr => pr.id === i.id); if (i.selectedVariantName) { const vIndex = p.variants.findIndex(v => v.name === i.selectedVariantName); if (vIndex !== -1) updates[`/products/${i.id}/variants/${vIndex}/stock`] = p.variants[vIndex].stock - i.quantity; } else { updates[`/products/${i.id}/stock`] = p.stock - i.quantity; } } 
                 
                 await update(ref(db), updates); 
-
-                // =========================================================
-                // SEND NOTIFICATION TO DELIVERY BOYS
-                // =========================================================
-                sendOrderNotification(orderData.id, finalTotal);
+                
+                // TRIGGER NOTIFICATION TO DELIVERY BOY
+                sendOrderNotification();
                 
                 if (appliedDiscount) await set(ref(db, `used_discounts/${currentUser.phone}/${appliedDiscount}`), true); 
                 await set(ref(db, `users/${currentUser.phone}/cart`), null); 
@@ -4380,7 +4361,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 try {
                     const newReseller = {
                         phone: currentUser.phone,
-                        joinedAt: newDate().toISOString(),
+                        joinedAt: new Date().toISOString(),
                         balance: 0,
                         totalEarnings: 0,
                         status: 'active'
