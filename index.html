@@ -3328,8 +3328,14 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             } else if(appliedDiscount) {
                 showToast(`Discount invalid`, 'error'); appliedDiscount = null;
             }   
+
+            // PENDING AMOUNT OPTION (Add to total if > 0)
+            let pendingAmount = 0;
+            if (isCheckout && currentUser && currentUser.pendingAmount) {
+                pendingAmount = Number(currentUser.pendingAmount) || 0;
+            }
             
-            const grandTotal = sub - dis + del;
+            const grandTotal = sub - dis + del + pendingAmount;
             const totalSavings = (totalOriginal - sub) + dis;
 
             // Check Shop Status for Checkout Button
@@ -3357,6 +3363,12 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         <span>− ${formatCurrency(dis)}</span>
                     </div>` : ''}
                     
+                    ${pendingAmount > 0 ? `
+                    <div class="fk-price-row-detail" style="color: var(--theme-orange);">
+                        <span>Pending Amount Option</span>
+                        <span>+ ${formatCurrency(pendingAmount)}</span>
+                    </div>` : ''}
+
                     <div class="fk-total-row">
                         <span>Total Amount</span>
                         <span>${formatCurrency(grandTotal)}</span>
@@ -3381,7 +3393,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
         };  
 
         // === NEW HELPER FUNCTION TO UPDATE CHECKOUT SUMMARY & WALLET LOGIC ===
-        const updateCheckoutSummaryHTML = (subtotal, deliveryFee, grandTotal, locCaptured, distKm) => {
+        const updateCheckoutSummaryHTML = (subtotal, deliveryFee, pendingAmount, grandTotal, locCaptured, distKm) => {
             const checkoutChargesContainer = document.getElementById('checkout-charges-summary');
             if (!checkoutChargesContainer) return; 
 
@@ -3392,6 +3404,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             checkoutChargesContainer.innerHTML = `
                 <div class="cart-summary-item"><span>Subtotal:</span><span>${formatCurrency(subtotal)}</span></div>
                 <div class="cart-summary-item"><span>Delivery Fee ${distText}:</span><span>${delText}</span></div>
+                ${pendingAmount > 0 ? `<div class="cart-summary-item" style="color: var(--theme-orange);"><span>Pending Amount Option:</span><span>+${formatCurrency(pendingAmount)}</span></div>` : ''}
                 <div class="cart-summary-item total"><span>Total Payable:</span><span>${formatCurrency(grandTotal)}</span></div>
             `;
 
@@ -3561,6 +3574,9 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         <div class="cart-summary-item"><span>Subtotal:</span><span>${formatCurrency(order.subtotal)}</span></div>
                         <div class="cart-summary-item"><span>Delivery Charge:</span><span>${formatCurrency(order.deliveryFee)}</span></div>
                         ${order.discount > 0 ? `<div class="cart-summary-item" style="color: var(--theme-green);"><span>Discount (${order.discountCode || ''}):</span><span>-${formatCurrency(order.discount)}</span></div>` : ''}
+                        
+                        ${order.pendingAmount > 0 ? `<div class="cart-summary-item" style="color: var(--theme-orange);"><span>Pending Amount Option:</span><span>+${formatCurrency(order.pendingAmount)}</span></div>` : ''}
+
                         ${order.walletDeduction > 0 ? `<div class="cart-summary-item" style="color: var(--theme-blue);"><span>Wallet Paid:</span><span>-${formatCurrency(order.walletDeduction)}</span></div>` : ''}
                         <div class="cart-summary-item total"><span>Total Amount:</span><span>${formatCurrency(order.total)}</span></div>
                         
@@ -3617,6 +3633,15 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 <td colspan="4" style="text-align: right; padding: 10px; font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;"><strong>Delivery Fee:</strong></td>
                 <td style="text-align: right; padding: 10px;">+ ${formatCurrency(order.deliveryFee)}</td>
             </tr>`;
+
+            let pendingRow = '';
+            if (order.pendingAmount > 0) {
+                pendingRow = `
+                <tr style="color: #ff6161;">
+                    <td colspan="4" style="text-align: right; padding: 10px; font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;"><strong>Pending Amount Option:</strong></td>
+                    <td style="text-align: right; padding: 10px;">+ ${formatCurrency(order.pendingAmount)}</td>
+                </tr>`;
+            }
 
             let discountRow = '';
             if (order.discount > 0) {
@@ -3718,6 +3743,7 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                                 <table style="width: 50%; border-collapse: collapse; font-size: 12px; font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
                                     ${subtotalRow}
                                     ${deliveryRow}
+                                    ${pendingRow}
                                     ${discountRow}
                                     ${walletRow}
                                     ${totalRow}
@@ -3894,6 +3920,19 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
             // REMOVED ADDRESS LISTENER
             const ur=ref(db,`used_discounts/${p}`), uc=onValue(ur,(s)=>{userUsedDiscounts=s.val()||{};}); activeListeners.usedDiscounts={ref:ur,callback:uc}; 
             
+            // PENDING AMOUNT OPTION LISTENER
+            const paRef=ref(db,`users/${p}/pendingAmount`), paCb=onValue(paRef,(s)=>{
+                if(currentUser) {
+                    currentUser.pendingAmount = Number(s.val()) || 0;
+                    if(window.location.hash.startsWith('#checkout')) {
+                        updateCartSummary();
+                        if(window.location.hash === '#checkout-summary') renderCheckoutSummaryPage();
+                        if(window.location.hash === '#checkout-payment') renderCheckoutPaymentPage();
+                    }
+                }
+            });
+            activeListeners.pendingAmount={ref:paRef,callback:paCb};
+
             const or=ref(db,'orders'), oc=onValue(or,(s)=>{ 
                 allOrders=s.val()||{}; 
                 creditWalletForDeliveredOrders(allOrders, p);
@@ -4031,10 +4070,12 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 if(d.type === 'percent') dis = Math.min(subtotal * (d.value / 100), d.max || Infinity); 
                 else if(d.type === 'fixed') dis = d.value;
             }
+
+            let pendingAmount = currentUser && currentUser.pendingAmount ? Number(currentUser.pendingAmount) : 0;
             
-            let total = subtotal - dis + calculatedDeliveryFee;
+            let total = subtotal - dis + calculatedDeliveryFee + pendingAmount;
             
-            updateCheckoutSummaryHTML(subtotal, calculatedDeliveryFee, total, true, distanceInKm);
+            updateCheckoutSummaryHTML(subtotal, calculatedDeliveryFee, pendingAmount, total, true, distanceInKm);
             
             document.getElementById('summary-step-continue-btn').onclick = () => {
                 window.location.hash = '#checkout-payment';
@@ -4062,7 +4103,10 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 if(d.type === 'percent') dis = Math.min(sub * (d.value / 100), d.max || Infinity); 
                 else if(d.type === 'fixed') dis = d.value;
             }
-            const grandTotal = sub - dis + calculatedDeliveryFee;
+            
+            let pendingAmount = currentUser && currentUser.pendingAmount ? Number(currentUser.pendingAmount) : 0;
+
+            const grandTotal = sub - dis + calculatedDeliveryFee + pendingAmount;
 
             if (walletBalance < grandTotal) {
                 walletOption.classList.add('disabled');
@@ -4193,7 +4237,17 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 let resellerToCredit = null;
                 const subtotal = Object.values(userCart).reduce((s, i) => s + (i.price * i.quantity), 0); 
                 const deliveryFee = calculatedDeliveryFee; 
-                const grandTotal = subtotal + deliveryFee;
+                
+                let discount = 0; 
+                if (appliedDiscount && validDiscounts[appliedDiscount]) { 
+                    const d = validDiscounts[appliedDiscount]; 
+                    discount = d.type === 'percent' ? Math.min(subtotal * (d.value/100),d.max||Infinity) : d.value; 
+                } 
+
+                // PENDING AMOUNT FETCH KARNA
+                let pendingAmount = currentUser && currentUser.pendingAmount ? Number(currentUser.pendingAmount) : 0;
+
+                const grandTotal = subtotal - discount + deliveryFee + pendingAmount;
 
                 let walletDeduction = 0;
                 let finalTotal = grandTotal;
@@ -4230,8 +4284,6 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                 } 
                 
                 const shippingDetails = currentDetectedAddress; 
-            
-                let discount = 0; if (appliedDiscount && validDiscounts[appliedDiscount]) { const d = validDiscounts[appliedDiscount]; discount = d.type === 'percent' ? Math.min(subtotal * (d.value/100),d.max||Infinity) : d.value; } 
                 
                 const orderData = { 
                     id: '', 
@@ -4241,7 +4293,9 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                     subtotal, 
                     discount, 
                     deliveryFee, 
-                    walletDeduction,total: finalTotal, 
+                    pendingAmount, // <--- SAVING PENDING AMOUNT IN ORDER DATA
+                    walletDeduction,
+                    total: finalTotal, 
                     date: new Date().toISOString(), 
                     status: 'Pending', 
                     shippingDetails, 
@@ -4279,6 +4333,12 @@ return `<div class="product-card ${extraClass} ${isOutOfStock?'out-of-stock':''}
                         net: finalCredit,
                         credited: false 
                     };
+                }
+
+                // JAISE HI ORDER SUCCESS HOGA, PENDING AMOUNT DATABASE SE 0 HO JAYEGA
+                if (pendingAmount > 0) {
+                    updates[`users/${currentUser.phone}/pendingAmount`] = 0;
+                    currentUser.pendingAmount = 0;
                 }
 
                 updates[`orders/${orderData.id}`] = orderData;
